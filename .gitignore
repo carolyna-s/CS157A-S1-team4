@@ -27,3 +27,6 @@ replay_pid*
 *.log
 *.properties
 .env
+
+#db config info
+db_config.jsp
