@@ -119,14 +119,12 @@
 </div>
     <script>
         function toggleDrawer(tripId) {
-            // Find the specific drawer holding the buttons for this trip
             const drawer = document.getElementById('drawer-' + tripId);
             
-            // Toggle it between open and closed
             if (drawer.style.display === "none" || drawer.style.display === "") {
-                drawer.style.display = "block";  // Open it up
+                drawer.style.display = "block"; 
             } else {
-                drawer.style.display = "none";   // Hide it again
+                drawer.style.display = "none";   
             }
         }
     </script>
