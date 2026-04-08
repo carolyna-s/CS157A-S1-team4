@@ -18,17 +18,28 @@
     
     if (trip_name == null || trip_name.trim().isEmpty()) 
     {
-        response.sendRedirect("login.jsp?error=Please+enter+trip+name.");
+        response.sendRedirect("create_trip.jsp?error=Please+enter+trip+name.");
         return;
     }
     if (start_location == null || start_location.trim().isEmpty() || destination == null || destination.trim().isEmpty()) 
     {
-        response.sendRedirect("login.jsp?error=Please+check++and+submit+location+fields.");
+        response.sendRedirect("create_trip.jsp?error=Please+check++and+submit+location+fields.");
         return;
     }
     if (start_date == null || start_date.trim().isEmpty() || end_date == null || end_date.trim().isEmpty()) 
     {
-        response.sendRedirect("login.jsp?error=Please+check++and+submit+date+fields.");
+        response.sendRedirect("create_trip.jsp?error=Please+check++and+submit+date+fields.");
+        return;
+    }
+    try {
+        java.sql.Date sqlStartDate = java.sql.Date.valueOf(start_date);
+        java.sql.Date sqlEndDate = java.sql.Date.valueOf(end_date);
+        if (sqlStartDate.after(sqlEndDate)) {
+            response.sendRedirect("create_trip.jsp?error=Start+date+must+be+before+end+date.");
+            return;
+        }
+    } catch (IllegalArgumentException e) {
+        response.sendRedirect("create_trip.jsp?error=Invalid+date+format.");
         return;
     }
 
