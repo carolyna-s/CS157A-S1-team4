@@ -6,7 +6,7 @@
     Integer userID = (Integer) session.getAttribute("userID");
     
     if (userID == null) {
-        response.sendRedirect("login.jsp?error=Session+expired.+Please+login+again.");
+        response.sendRedirect("login.jsp?error=Invalid+Session.+Please+login+again.");
         return;
     }
 
