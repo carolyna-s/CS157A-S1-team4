@@ -90,6 +90,8 @@
         rs = pstmt.executeQuery();
         while (rs.next()) {
             java.util.HashMap<String, String> t = new java.util.HashMap<>();
+            t.put("seq", String.valueOf(rs.getInt("trip_transport_sequence_num")));
+            t.put("transportID", String.valueOf(rs.getInt("transportID")));
             t.put("transport_name", rs.getString("transport_name"));
             t.put("departure_location", rs.getString("departure_location"));
             t.put("arrival_destination", rs.getString("arrival_destination"));
@@ -186,15 +188,27 @@
         </form>
     </div>
 
+    <%
+        java.util.ArrayList<java.util.HashMap<String, String>> outboundFlights = new java.util.ArrayList<>();
+        java.util.ArrayList<java.util.HashMap<String, String>> returnFlights = new java.util.ArrayList<>();
+        for (java.util.HashMap<String, String> t : selectedTransport) {
+            if ("return".equals(t.get("direction"))) {
+                returnFlights.add(t);
+            } else {
+                outboundFlights.add(t);
+            }
+        }
+    %>
+
     <div class="card card-wide" style="margin-bottom: 24px;">
-        <h2>Transportation</h2>
-        <% if (selectedTransport.isEmpty()) { %>
+        <h2>Outbound Flight</h2>
+        <% if (outboundFlights.isEmpty()) { %>
             <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">
-                No transportation selected yet.
+                No outbound flight selected yet.
             </p>
         <% } else { %>
             <div class="trips-grid" style="margin-top: 16px;">
-                <% for (java.util.HashMap<String, String> t : selectedTransport) { %>
+                <% for (java.util.HashMap<String, String> t : outboundFlights) { %>
                     <div class="trip-card">
                         <div class="trip-icon planned">&#9992;</div>
                         <div class="trip-details">
@@ -204,14 +218,47 @@
                         </div>
                         <div class="trip-meta">
                             <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(t.get("price"))) %></div>
-                            <div class="trip-status status-<%= t.get("booking_status") %>"><%= t.get("direction") %> - <%= t.get("booking_status") %></div>
+                            <div class="trip-status status-<%= t.get("booking_status") %>"><%= t.get("booking_status") %></div>
+                            <a href="remove_transportation.jsp?tripId=<%= tripId %>&seq=<%= t.get("seq") %>&transportID=<%= t.get("transportID") %>"
+                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
                         </div>
                     </div>
                 <% } %>
             </div>
         <% } %>
         <div class="hero-actions" style="justify-content: flex-start; margin-top: 18px;">
-            <a href="browse_transportation.jsp?tripId=<%= tripId %>" class="btn btn-primary">Browse Transportation</a>
+            <a href="browse_transportation.jsp?tripId=<%= tripId %>&direction=outbound" class="btn btn-primary">Browse Outbound Flights</a>
+        </div>
+    </div>
+
+    <div class="card card-wide" style="margin-bottom: 24px;">
+        <h2>Return Flight</h2>
+        <% if (returnFlights.isEmpty()) { %>
+            <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">
+                No return flight selected yet.
+            </p>
+        <% } else { %>
+            <div class="trips-grid" style="margin-top: 16px;">
+                <% for (java.util.HashMap<String, String> t : returnFlights) { %>
+                    <div class="trip-card">
+                        <div class="trip-icon planned">&#9992;</div>
+                        <div class="trip-details">
+                            <div class="trip-name"><%= t.get("transport_name") %></div>
+                            <div class="trip-route"><%= t.get("departure_location") %> &rarr; <%= t.get("arrival_destination") %></div>
+                            <div class="trip-route"><%= t.get("departure_time") %> &rarr; <%= t.get("arrival_time") %></div>
+                        </div>
+                        <div class="trip-meta">
+                            <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(t.get("price"))) %></div>
+                            <div class="trip-status status-<%= t.get("booking_status") %>"><%= t.get("booking_status") %></div>
+                            <a href="remove_transportation.jsp?tripId=<%= tripId %>&seq=<%= t.get("seq") %>&transportID=<%= t.get("transportID") %>"
+                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+        <div class="hero-actions" style="justify-content: flex-start; margin-top: 18px;">
+            <a href="browse_transportation.jsp?tripId=<%= tripId %>&direction=return" class="btn btn-primary">Browse Return Flights</a>
         </div>
     </div>
 
