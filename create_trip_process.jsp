@@ -1,6 +1,6 @@
 <%@ page import="java.sql.*" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ include file="WEB-INF/db_config.jsp" %>
+<%@ include file="/WEB-INF/db_config.jsp" %>
 
 <%
     Integer userID = (Integer) session.getAttribute("userID");
@@ -23,12 +23,12 @@
     }
     if (start_location == null || start_location.trim().isEmpty() || destination == null || destination.trim().isEmpty()) 
     {
-        response.sendRedirect("create_trip.jsp?error=Please+check++and+submit+location+fields.");
+        response.sendRedirect("create_trip.jsp?error=Please+check+and+submit+location+fields.");
         return;
     }
     if (start_date == null || start_date.trim().isEmpty() || end_date == null || end_date.trim().isEmpty()) 
     {
-        response.sendRedirect("create_trip.jsp?error=Please+check++and+submit+date+fields.");
+        response.sendRedirect("create_trip.jsp?error=Please+check+and+submit+date+fields.");
         return;
     }
     try {
@@ -50,7 +50,8 @@
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
         pstmt = con.prepareStatement(
-            "INSERT INTO Trip (userID, trip_name, start_location, destination, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, 'planned')"
+            "INSERT INTO Trip (userID, trip_name, start_location, destination, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, 'planned')",
+            Statement.RETURN_GENERATED_KEYS
         );
         
         pstmt.setInt(1,userID);
@@ -61,13 +62,20 @@
         pstmt.setDate(6,java.sql.Date.valueOf(end_date));
 
 
-        int rowsAffected = pstmt.executeUpdate();
-        if (rowsAffected > 0) 
+        pstmt.executeUpdate();
+        ResultSet keys = pstmt.getGeneratedKeys();
+        int newTripID = 0;
+        if (keys.next()) {
+            newTripID = keys.getInt(1);
+        }
+        keys.close();
+
+        if (newTripID > 0)
         {
             pstmt.close();
             con.close();
 
-            response.sendRedirect("dashboard.jsp?success=Trip+added+successfully!");
+            response.sendRedirect("trip_details.jsp?tripId=" + newTripID);
         } 
         else 
         {
