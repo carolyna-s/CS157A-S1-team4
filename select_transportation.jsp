@@ -42,16 +42,19 @@
         rs.close();
         pstmt.close();
 
-        // Get next sequence number
+        // Get next sequence number (MAX is null when trip has no rows yet)
         pstmt = con.prepareStatement(
-            "SELECT COALESCE(MAX(trip_transport_sequence_num), 0) + 1 AS next_seq FROM Trip_Transportation WHERE tripID = ?"
+            "SELECT MAX(trip_transport_sequence_num) AS max_seq FROM Trip_Transportation WHERE tripID = ?"
         );
         pstmt.setInt(1, tripId);
         rs = pstmt.executeQuery();
 
         int nextSeq = 1;
         if (rs.next()) {
-            nextSeq = rs.getInt("next_seq");
+            Object maxObj = rs.getObject("max_seq");
+            if (maxObj != null) {
+                nextSeq = ((Number) maxObj).intValue() + 1;
+            }
         }
         rs.close();
         pstmt.close();
