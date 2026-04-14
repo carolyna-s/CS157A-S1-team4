@@ -5,4 +5,7 @@
     static final String DB_USER   = "root";
     static final String DB_PASS   = "root";   //  Your MySQL password
     static final String DB_DRIVER = "com.mysql.jdbc.Driver";
+
+    // SerpAPI (Google Flights)
+    static final String SERPAPI_KEY = "YOUR_SERPAPI_KEY_HERE";
 %>

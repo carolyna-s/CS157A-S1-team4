@@ -1,6 +1,6 @@
 <%@ page import="java.sql.*" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ include file="WEB-INF/db_config.jsp" %>
+<%@ include file="/WEB-INF/db_config.jsp" %>
 
 <%
     String username = (String) session.getAttribute("username");
@@ -43,7 +43,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travelog — Register</title>
+    <title>Travelog — My Trips</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -73,30 +73,19 @@
             if (status == null) status = "planned"; // default fallback
             String statusClass = status.toLowerCase();
         %>
-            <div class="trip-card" style="flex-direction: column; align-items: stretch; padding: 0;">
-                <div style="display: flex; align-items: center; gap: 16px; padding: 18px 24px; cursor: pointer;" onclick="toggleDrawer(<%= tripId %>)">
-                    
+            <a href="trip_details.jsp?tripId=<%= tripId %>" style="text-decoration: none; color: inherit;">
+                <div class="trip-card">
                     <div class="trip-icon <%= statusClass %>">📍</div>
-                    
                     <div class="trip-details">
                         <div class="trip-name"><%= rs.getString("trip_name") %></div>
                         <div class="trip-route"><%= rs.getString("start_location") %> &rarr; <%= rs.getString("destination") %></div>
                     </div>
-                    
                     <div class="trip-meta">
                         <div class="trip-dates"><%= rs.getString("start_date") %> to <%= rs.getString("end_date") %></div>
                         <div class="trip-status status-<%= statusClass %>"><%= status %></div>
                     </div>
                 </div>
-
-                <div class="trip-drawer" id="drawer-<%= tripId %>" style="display: none; padding: 18px 24px; border-top: 1px solid rgba(26, 26, 26, 0.08); background: #FAF6F1;">
-                    <div class="hero-actions" style="margin-top: 0;">
-                        <a href="transportation_placehold.jsp?tripId=<%= tripId %>" class="btn btn-secondary btn-sm">Transportation Options</a>
-                        <a href="lodging_placehold.jsp?tripId=<%= tripId %>" class="btn btn-secondary btn-sm">Lodging</a>
-                        
-                    </div>
-                </div>
-            </div>
+            </a>
         <% } %>
         </div>
 
@@ -117,18 +106,5 @@
     </div>
 
 </div>
-    <script>
-        function toggleDrawer(tripId) {
-            const drawer = document.getElementById('drawer-' + tripId);
-            
-            if (drawer.style.display === "none" || drawer.style.display === "") {
-                drawer.style.display = "block"; 
-            } else {
-                drawer.style.display = "none";   
-            }
-        }
-    </script>
-</body>
-
 </body>
 </html>
