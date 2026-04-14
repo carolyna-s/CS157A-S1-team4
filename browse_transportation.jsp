@@ -65,6 +65,8 @@
     String searchDest = request.getParameter("arrival_id");
     String searchDate = request.getParameter("outbound_date");
     String returnDate = request.getParameter("return_date");
+    String searchDirection = request.getParameter("direction");
+    if (searchDirection == null) searchDirection = "outbound";
     boolean searched = (searchOrigin != null && searchDest != null && searchDate != null);
 
     ArrayList<HashMap<String, String>> flightResults = new ArrayList<>();
@@ -113,13 +115,11 @@
                 rs.close();
                 pstmt.close();
 
-                boolean isRoundTrip = (returnDate != null && !returnDate.trim().isEmpty());
                 String apiUrl = "https://serpapi.com/search.json?engine=google_flights" +
                     "&departure_id=" + URLEncoder.encode(searchOrigin.trim().toUpperCase(), "UTF-8") +
                     "&arrival_id=" + URLEncoder.encode(searchDest.trim().toUpperCase(), "UTF-8") +
                     "&outbound_date=" + URLEncoder.encode(searchDate, "UTF-8") +
-                    (isRoundTrip ? "&return_date=" + URLEncoder.encode(returnDate, "UTF-8") : "") +
-                    "&currency=USD&hl=en&type=" + (isRoundTrip ? "1" : "2") +
+                    "&currency=USD&hl=en&type=2" +
                     "&api_key=" + URLEncoder.encode(SERPAPI_KEY, "UTF-8");
 
                 URL url = new URL(apiUrl);
@@ -316,27 +316,28 @@
                     <label>From (Airport Code)</label>
                     <input type="text" name="departure_id"
                            value="<%= searched ? searchOrigin : "" %>"
-                           placeholder="e.g. SJC" required>
+                           placeholder="e.g. <%= "return".equals(searchDirection) ? "LAX" : "SJC" %>" required>
                 </div>
                 <div class="form-group">
                     <label>To (Airport Code)</label>
                     <input type="text" name="arrival_id"
                            value="<%= searched ? searchDest : "" %>"
-                           placeholder="e.g. LAX" required>
+                           placeholder="e.g. <%= "return".equals(searchDirection) ? "SJC" : "LAX" %>" required>
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="form-group">
-                    <label>Departure Date</label>
-                    <input type="date" name="outbound_date"
-                           value="<%= searched ? searchDate : tripStartDate %>" required>
-                </div>
-                <div class="form-group">
-                    <label>Return Date (optional)</label>
-                    <input type="date" name="return_date"
-                           value="<%= searched && returnDate != null ? returnDate : tripEndDate %>">
-                </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" name="outbound_date"
+                       value="<%= searched ? searchDate : ("return".equals(searchDirection) ? tripEndDate : tripStartDate) %>" required>
+            </div>
+
+            <div class="form-group">
+                <label>Searching For</label>
+                <select name="direction" style="width: 100%; padding: 13px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--charcoal); background: var(--cream); outline: none;">
+                    <option value="outbound" <%= (request.getParameter("direction") != null && request.getParameter("direction").equals("outbound")) ? "selected" : "" %>>Outbound Flight</option>
+                    <option value="return" <%= (request.getParameter("direction") != null && request.getParameter("direction").equals("return")) ? "selected" : "" %>>Return Flight</option>
+                </select>
             </div>
 
             <button type="submit" class="btn btn-primary">Search Flights</button>
@@ -370,7 +371,7 @@
                             <form action="select_transportation.jsp" method="POST" style="margin-top: 8px;">
                                 <input type="hidden" name="tripId" value="<%= tripId %>">
                                 <input type="hidden" name="transportID" value="<%= flight.get("transportID") %>">
-                                <input type="hidden" name="direction" value="outbound">
+                                <input type="hidden" name="direction" value="<%= searchDirection %>">
                                 <button type="submit" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.8rem;">Select</button>
                             </form>
                         </div>
@@ -398,7 +399,7 @@
                             <form action="select_transportation.jsp" method="POST" style="margin-top: 8px;">
                                 <input type="hidden" name="tripId" value="<%= tripId %>">
                                 <input type="hidden" name="transportID" value="<%= listing.get("transportID") %>">
-                                <input type="hidden" name="direction" value="outbound">
+                                <input type="hidden" name="direction" value="<%= searchDirection %>">
                                 <button type="submit" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.8rem;">Select</button>
                             </form>
                         </div>
