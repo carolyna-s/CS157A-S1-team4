@@ -8,3 +8,19 @@
 4. Tomcat's Root should point to this (so in tomcat/conf/Catalina/localhost create file ROOT.xml and copy paste this <Context docBase="path to folder here" reloadable="true"/>)
 5. Start tomcat and go to http://localhost:8080/
 6. For flight API, we are using SERPAPI, add your own free api key into the db_config and should work immediatly when searching flights
+
+
+## Requirements We Implemented
+
+(1) Register Account
+(2) Login
+(3) Logout
+(4) Delete Account
+(5) Create Trip
+(6) Update Trip Details
+(7) Cancel Trip (change from planned to cancelled)
+(8) Add Transportation
+(9) Browse outbound flights (API KEY USAGE) - email me @ meghana.indukuri@sjsu.edu for key if needed
+(10) Browse inbound flights (API KEY USAGE) - email me @ meghana.indukuri@sjsu.edu for key if needed
+(11) Remove Transportation
+(12) View trips
