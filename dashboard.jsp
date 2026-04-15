@@ -19,6 +19,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
+        // show the trips by recent (time created DESC, probs update later to last_edited_time)
         pstmt = con.prepareStatement(
             "SELECT tripID, trip_name, start_location, destination, start_date, end_date, status " +
             "FROM Trip WHERE userID = ? " +
