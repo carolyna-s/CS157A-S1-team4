@@ -15,19 +15,21 @@
     String username = (String) session.getAttribute("username");
     Integer userID = (Integer) session.getAttribute("userID");
 
-    if (username == null) {
+    if (username == null) 
+    {
         response.sendRedirect("login.jsp");
         return;
     }
 
     String tripIdParam = request.getParameter("tripId");
-    if (tripIdParam == null) {
+    if (tripIdParam == null) 
+    {
         response.sendRedirect("view_trips.jsp");
         return;
     }
     int tripId = Integer.parseInt(tripIdParam);
 
-    // Get trip info for prefilling
+    // get trip info for prefilling
     Connection con = null;
     PreparedStatement pstmt = null;
     ResultSet rs = null;
@@ -38,9 +40,9 @@
     String tripEndDate = "";
 
     try {
-        Class.forName(DB_DRIVER);
-        con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
-
+        Class.forName(DB_DRIVER); // from db config
+        con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS); // from db config
+        // select querey 
         pstmt = con.prepareStatement(
             "SELECT start_location, destination, start_date, end_date FROM Trip WHERE tripID = ? AND userID = ?"
         );
@@ -48,6 +50,7 @@
         pstmt.setInt(2, userID);
         rs = pstmt.executeQuery();
 
+        // query true, rs.next() returns true if valid rows in the set per https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html
         if (rs.next()) {
             tripStartLocation = rs.getString("start_location");
             tripDestination = rs.getString("destination");
@@ -56,31 +59,42 @@
         }
         rs.close();
         pstmt.close();
-    } catch (Exception e) {
+    } 
+    catch (Exception e) 
+    {
         e.printStackTrace();
     }
 
-    // Search params
+    // search params 
     String searchOrigin = request.getParameter("departure_id");
     String searchDest = request.getParameter("arrival_id");
     String searchDate = request.getParameter("outbound_date");
     String returnDate = request.getParameter("return_date");
     String searchDirection = request.getParameter("direction");
-    if (searchDirection == null) searchDirection = "outbound";
+    
+    if (searchDirection == null) 
+    {
+        searchDirection = "outbound";
+    }
+    
+    // making sure none of the information is null
     boolean searched = (searchOrigin != null && searchDest != null && searchDate != null);
 
+    // hashmap for cache
     ArrayList<HashMap<String, String>> flightResults = new ArrayList<>();
     boolean fromCache = false;
     String searchError = null;
 
+    // if searchable (i.e., info not null)
     if (searched) {
         try {
-            // Check cache: results for this route/date from the last 30 days?
-            if (con == null || con.isClosed()) {
+            if (con == null || con.isClosed()) 
+            {
                 Class.forName(DB_DRIVER);
                 con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
             }
 
+            // query to see if recent and ordered by cost
             pstmt = con.prepareStatement(
                 "SELECT * FROM Transport_Listing " +
                 "WHERE departure_location = ? AND arrival_destination = ? " +
@@ -94,10 +108,11 @@
             pstmt.setString(3, searchDate);
             rs = pstmt.executeQuery();
 
+            // before first row (means we have a result we can use): https://docs.raima.com/rdm/14_2/ug/jdbc/ResultSet/Method/isBeforeFirst.htm#:~:text=isBeforeFirst()%20Description:%20Retrieves%20whether%20the%20cursor%20is,the%20first%20row%20in%20this%20ResultSet%20object.
             if (rs.isBeforeFirst()) {
-                // Cache hit
                 fromCache = true;
-                while (rs.next()) {
+                while (rs.next()) 
+                {
                     HashMap<String, String> flight = new HashMap<>();
                     flight.put("transportID", String.valueOf(rs.getInt("transportID")));
                     flight.put("transport_name", rs.getString("transport_name"));
@@ -110,11 +125,14 @@
                 }
                 rs.close();
                 pstmt.close();
-            } else {
-                // Cache miss — call SerpAPI Google Flights
+            } 
+            // no cache (we need to use API)
+            else 
+            {
                 rs.close();
                 pstmt.close();
 
+                // api url info per the webapge
                 String apiUrl = "https://serpapi.com/search.json?engine=google_flights" +
                     "&departure_id=" + URLEncoder.encode(searchOrigin.trim().toUpperCase(), "UTF-8") +
                     "&arrival_id=" + URLEncoder.encode(searchDest.trim().toUpperCase(), "UTF-8") +
@@ -129,39 +147,52 @@
 
                 int responseCode = conn.getResponseCode();
                 BufferedReader br;
-                if (responseCode == 200) {
+                if (responseCode == 200)  // good 
+                {
                     br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                } else {
+                } 
+                else 
+                {
                     br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
                 }
 
                 StringBuilder apiResponse = new StringBuilder();
                 String line;
-                while ((line = br.readLine()) != null) {
+                while ((line = br.readLine()) != null) 
+                {
                     apiResponse.append(line);
                 }
                 br.close();
 
-                if (responseCode != 200) {
+                if (responseCode != 200) 
+                {
                     searchError = "API error. Please check your airport codes and try again.";
-                } else {
+                } 
+                // parse w json (we added it to lib)
+                else 
+                {
                     JSONObject json = new JSONObject(apiResponse.toString());
 
-                    // Combine best_flights and other_flights
                     JSONArray allFlights = new JSONArray();
-                    if (json.has("best_flights")) {
+                    if (json.has("best_flights")) 
+                    {
                         JSONArray best = json.getJSONArray("best_flights");
                         for (int i = 0; i < best.length(); i++) allFlights.put(best.getJSONObject(i));
                     }
-                    if (json.has("other_flights")) {
+                    if (json.has("other_flights")) 
+                    {
                         JSONArray other = json.getJSONArray("other_flights");
                         for (int i = 0; i < other.length(); i++) allFlights.put(other.getJSONObject(i));
                     }
 
-                    if (allFlights.length() == 0) {
+                    if (allFlights.length() == 0) 
+                    {
                         searchError = "No flights found for this route and date.";
-                    } else {
-                        // Clear old cache for this route/date
+                    } 
+                    // found flights
+                    else 
+                    {
+                        // delete outdated ones
                         pstmt = con.prepareStatement(
                             "DELETE FROM Transport_Listing " +
                             "WHERE departure_location = ? AND arrival_destination = ? " +
@@ -173,17 +204,17 @@
                         pstmt.executeUpdate();
                         pstmt.close();
 
+                        // limit to 20 for now
                         int maxResults = Math.min(allFlights.length(), 20);
                         for (int i = 0; i < maxResults; i++) {
                             JSONObject flightObj = allFlights.getJSONObject(i);
 
-                            // Get price
                             double price = 0;
-                            if (flightObj.has("price")) {
+                            if (flightObj.has("price")) 
+                            {
                                 price = flightObj.getDouble("price");
                             }
 
-                            // Get first leg
                             JSONArray legs = flightObj.getJSONArray("flights");
                             JSONObject firstLeg = legs.getJSONObject(0);
                             JSONObject lastLeg = legs.getJSONObject(legs.length() - 1);
@@ -197,20 +228,23 @@
                             String arrTime = lastLeg.getJSONObject("arrival_airport").getString("time");
 
                             String displayName = airline;
-                            if (!flightNo.isEmpty()) {
+                            if (!flightNo.isEmpty()) 
+                            {
                                 displayName += " " + flightNo;
                             }
-                            if (legs.length() > 1) {
+                            if (legs.length() > 1) 
+                            {
                                 displayName += " (" + legs.length() + " stops)";
                             }
 
-                            // Format for MySQL datetime
+                            // formatting for sql
                             String depFormatted = depTime.replace("T", " ");
                             String arrFormatted = arrTime.replace("T", " ");
                             if (depFormatted.length() > 19) depFormatted = depFormatted.substring(0, 19);
                             if (arrFormatted.length() > 19) arrFormatted = arrFormatted.substring(0, 19);
 
-                            // Insert into DB
+
+                            // insert the info + make sure to deal w autogenerated keys 
                             pstmt = con.prepareStatement(
                                 "INSERT INTO Transport_Listing (transport_type, transport_name, departure_location, " +
                                 "arrival_destination, departure_time, arrival_time, base_cost, availability, listing_status, last_fetched) " +
@@ -244,16 +278,18 @@
                     }
                 }
             }
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             e.printStackTrace();
             searchError = "Error searching for flights: " + e.getMessage();
         }
     }
 
-    // Get company-posted listings
     ArrayList<HashMap<String, String>> companyListings = new ArrayList<>();
     try {
-        if (con == null || con.isClosed()) {
+        if (con == null || con.isClosed()) 
+        {
             Class.forName(DB_DRIVER);
             con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
         }
@@ -274,9 +310,13 @@
         }
         rs.close();
         pstmt.close();
-    } catch (Exception e) {
+    } 
+    catch (Exception e) 
+    {
         e.printStackTrace();
-    } finally {
+    } 
+    finally 
+    {
         if (con != null) { try { con.close(); } catch(Exception ex) {} }
     }
 %>
