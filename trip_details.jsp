@@ -272,6 +272,19 @@
         </div>
     </div>
 
+    <% if (!"cancelled".equals(status)) { %>
+    <div class="card card-wide" style="margin-bottom: 24px;">
+        <h2>Cancel Trip</h2>
+        <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">
+            Cancelling this trip cannot be undone.
+        </p>
+        <form action="cancel_trip_process.jsp" method="POST" style="margin-top: 18px;"
+            onsubmit="return confirm('Are you sure you want to cancel this trip?');">
+        <input type="hidden" name="tripId" value="<%= tripId %>">
+        <button type="submit" class="btn btn-danger">Cancel Trip</button>
+    </form>
+    </div>
+    <% } %>
     <div class="pond-footer">
         <p>Travelog &copy; 2026 — Team 4</p>
     </div>
