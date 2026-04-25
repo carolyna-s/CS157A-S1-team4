@@ -75,6 +75,7 @@ CREATE TABLE Hotel_Listing (
     price_per_night DECIMAL(10,2) NOT NULL,
     availability ENUM('available', 'unavailable') NOT NULL DEFAULT 'available',
     listing_status ENUM('active', 'archived', 'hidden') NOT NULL DEFAULT 'active',
+    last_fetched DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (company_userID) REFERENCES Company(userID) ON DELETE SET NULL
 );
 
