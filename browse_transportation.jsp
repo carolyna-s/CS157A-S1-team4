@@ -9,7 +9,7 @@
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ include file="/WEB-INF/db_config.jsp" %>
+<%@ include file="WEB-INF/db_config.jsp" %>
 
 <%
     String username = (String) session.getAttribute("username");
