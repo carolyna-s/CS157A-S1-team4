@@ -76,6 +76,7 @@ CREATE TABLE Hotel_Listing (
     availability ENUM('available', 'unavailable') NOT NULL DEFAULT 'available',
     listing_status ENUM('active', 'archived', 'hidden') NOT NULL DEFAULT 'active',
     last_fetched DATETIME DEFAULT CURRENT_TIMESTAMP,
+    thumbnail_url VARCHAR(500),
     FOREIGN KEY (company_userID) REFERENCES Company(userID) ON DELETE SET NULL
 );
 
