@@ -114,9 +114,10 @@
                     hotel.put("hotelID", String.valueOf(rs.getInt("hotelID")));
                     hotel.put("hotel_name", rs.getString("hotel_name"));
                     hotel.put("location", rs.getString("location"));
-                    hotel.put("description",rs.getString("rating"));
+                    hotel.put("description",rs.getString("description"));
                     hotel.put("rating",rs.getString("rating"));
                     hotel.put("price_per_night",rs.getString("price_per_night"));
+                    hotel.put("thumbnail_url", rs.getString("thumbnail_url"));
                     hotelResults.add(hotel);
                 }
                 rs.close();
@@ -197,6 +198,16 @@
                             JSONObject hotelObj = properties.getJSONObject(i);
                             String hotel_name = hotelObj.has("name") ? hotelObj.getString("name") : "Unknown";
                             String description = hotelObj.has("description") ? hotelObj.getString("description") : "";
+                            String thumbnail = "";
+                            if (hotelObj.has("images")) {
+                                JSONArray images = hotelObj.getJSONArray("images");
+                                if (images.length() > 0) {
+                                    JSONObject firstImg = images.getJSONObject(0);
+                                    if (firstImg.has("thumbnail")) {
+                                        thumbnail = firstImg.getString("thumbnail");
+                                    }
+                                }
+                            }
                             double price = 0;
                             double rating = 0;
                             if (hotelObj.has("rate_per_night")) 
@@ -216,8 +227,8 @@
                             }
 
                             pstmt = con.prepareStatement(
-                                "INSERT INTO Hotel_Listing (hotel_name, location, description, rating, price_per_night, availability, listing_status,last_fetched) " +
-                                "VALUES (?, ?, ?, ?, ?, 'available', 'active',NOW())",
+                                "INSERT INTO Hotel_Listing (hotel_name, location, description, rating, price_per_night, availability, listing_status,last_fetched,thumbnail_url) " +
+                                "VALUES (?, ?, ?, ?, ?, 'available', 'active',NOW(), ?)",
                                 Statement.RETURN_GENERATED_KEYS
                             );
                             pstmt.setString(1, hotel_name);
@@ -225,6 +236,7 @@
                             pstmt.setString(3, description.length() > 500 ? description.substring(0, 500) : description);
                             pstmt.setDouble(4, rating);
                             pstmt.setDouble(5, price);
+                            pstmt.setString(6,thumbnail);
                             pstmt.executeUpdate();
 
                             ResultSet keys = pstmt.getGeneratedKeys();
@@ -245,6 +257,7 @@
                             else{
                                 continue; //if price 0, then just skip that hotel
                             }
+                            hotel.put("thumbnail_url",thumbnail);
                             hotelResults.add(hotel);
                         }
                     }
@@ -266,7 +279,7 @@
             con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
         }
         pstmt = con.prepareStatement(
-            "SELECT * FROM Hotel_Listing WHERE company_userID IS NOT NULL AND listing_status = 'active' AND last_fetched > DATE_SUB(NOW(), INTERVAL 30 DAY) ORDER BY base_cost ASC "
+            "SELECT * FROM Hotel_Listing WHERE company_userID IS NOT NULL AND listing_status = 'active' AND last_fetched > DATE_SUB(NOW(), INTERVAL 30 DAY) ORDER BY price_per_night ASC "
         );
         rs = pstmt.executeQuery();
         while (rs.next()) {
@@ -365,7 +378,7 @@
 
     <% if (searched && hotelResults.size() > 0) { %>
         <div class="card card-wide" style="margin-bottom: 24px;">
-            <h2>Hotel Results
+            <h2>Hotels & Lodging Results
                 <% if (fromCache) { %>
                     <span style="font-size: 0.7rem; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-weight: 500;">(cached — prices may have changed)</span>
                 <% } %>
@@ -373,10 +386,17 @@
             <div class="trips-grid" style="margin-top: 16px;">
                 <% for (HashMap<String, String> hotel : hotelResults) { %>
                     <div class="trip-card" style="flex-direction: row; align-items: center; gap: 16px;">
-                        <div class="trip-icon planned">&#9992;</div>
+                        <div class="trip-icon planned" style="padding: 0; overflow: hidden; background: transparent; border: none;">
+        <% if (hotel.get("thumbnail_url") != null && !hotel.get("thumbnail_url").isEmpty()) { %>
+            <img src="<%= hotel.get("thumbnail_url") %>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        <% } else { %>
+            &#8962; <!-- Fallback to the house icon if no image is found -->
+        <% } %>
+    </div>
+
                         <div class="trip-details" style="flex: 1;">
                             <div class="trip-name"><%= hotel.get("hotel_name") %></div>
-                            <div class="trip-route"><%= hotel.get("location") %> &rarr; <%= hotel.get("rating")%>&starf;</div>
+                            <div class="trip-route"><%= hotel.get("location") %> &rarr; <%= String.format("%.1f", Double.parseDouble(hotel.get("rating"))) %>&starf;</div>
 
                         </div>
                         
