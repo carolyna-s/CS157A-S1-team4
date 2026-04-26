@@ -93,9 +93,9 @@
             // query to see if recent and ordered by cost (fix? bc things not ordered by cost)
             pstmt = con.prepareStatement(
                 "SELECT * FROM Hotel_Listing " +
-                "WHERE location = ?"  +
+                "WHERE location = ? "  +
                 "AND description = ? " +
-                "AND rating = ?" +
+                "AND rating = ? " +
                 "AND listing_status = 'active' AND company_userID IS NULL " +
                 "AND last_fetched > DATE_SUB(NOW(), INTERVAL 30 DAY) "+
                 "ORDER BY price_per_night ASC"
@@ -345,12 +345,12 @@
                 
                 <div class="form-group">
                 <label>Number of Adult Guests</label>
-                <input type="number" name="adult_guests" value="<%= searched ? numAdults : "1" %>" min="1" required > </input>
+                <input type="number" name="adult_guests" value="<%= searched ? numAdults : "1" %>" min="1" required>
                 </div>
                 
             </div>
 
-            <div style "display:grid; grid-template-comlumns: 1fr 1fr; gap: 12px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                     <label>Check in Date</label>
                     <input type="date" name="check_in_date"
@@ -390,7 +390,7 @@
         <% if (hotel.get("thumbnail_url") != null && !hotel.get("thumbnail_url").isEmpty()) { %>
             <img src="<%= hotel.get("thumbnail_url") %>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
         <% } else { %>
-            &#8962; <!-- Fallback to the house icon if no image is found -->
+            &#8962; //house logo
         <% } %>
     </div>
 
@@ -415,3 +415,6 @@
             </div>
         </div>
     <% } %>
+</div>
+</body>
+</html>

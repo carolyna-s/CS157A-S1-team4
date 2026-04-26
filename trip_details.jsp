@@ -1,6 +1,6 @@
 <%@ page import="java.sql.*" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ include file="/WEB-INF/db_config.jsp" %>
+<%@ include file="WEB-INF/db_config.jsp" %>
 
 <%
     String username = (String) session.getAttribute("username");
@@ -42,7 +42,7 @@
 
         pstmt = con.prepareStatement(
             "SELECT trip_name, start_location, destination, start_date, end_date, status " +
-            "FROM Trip WHERE tripID = ? AND userID = ?"
+            " FROM Trip WHERE tripID = ? AND userID = ? "
         );
         pstmt.setInt(1, tripId);
         pstmt.setInt(2, userID);
@@ -101,6 +101,39 @@
             t.put("direction", rs.getString("direction"));
             t.put("booking_status", rs.getString("booking_status"));
             selectedTransport.add(t);
+        }
+        rs.close();
+        pstmt.close();
+    } 
+    catch (Exception e) {
+        e.printStackTrace();
+    } 
+    java.util.ArrayList<java.util.HashMap<String, String>> selectedHotels = new java.util.ArrayList<>();
+    try{
+        if (con == null || con.isClosed()){
+            Class.forName(DB_DRIVER);
+            con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        }
+        pstmt = con.prepareStatement(
+            "SELECT th.*, hl.hotel_name, hl.location, hl.thumbnail_url " +
+            "FROM Trip_Hotels th " +
+            "JOIN Hotel_Listing hl ON th.hotelID = hl.hotelID " +
+            "WHERE th.tripID = ? ORDER BY th.trip_hotel_sequence_num " 
+        );
+        pstmt.setInt(1,tripId);
+        rs=pstmt.executeQuery();
+        while(rs.next()){
+           java.util.HashMap<String, String> h = new java.util.HashMap<>();
+            h.put("seq", String.valueOf(rs.getInt("trip_hotel_sequence_num")));
+            h.put("hotelID", String.valueOf(rs.getInt("hotelID")));
+            h.put("hotel_name", rs.getString("hotel_name"));
+            h.put("location", rs.getString("location"));
+            h.put("check_in_date", rs.getString("check_in_date"));
+            h.put("check_out_date", rs.getString("check_out_date"));
+            h.put("total_cost", rs.getString("total_cost"));
+            h.put("booking_status", rs.getString("booking_status"));
+            h.put("thumbnail_url", rs.getString("thumbnail_url"));
+            selectedHotels.add(h); 
         }
         rs.close();
         pstmt.close();
@@ -261,12 +294,38 @@
             <a href="browse_transportation.jsp?tripId=<%= tripId %>&direction=return" class="btn btn-primary">Browse Return Flights</a>
         </div>
     </div>
-
     <div class="card card-wide" style="margin-bottom: 24px;">
         <h2>Lodging</h2>
-        <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">
-            No hotels selected yet.
-        </p>
+        <% if (selectedHotels.isEmpty()) { %>
+            <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">
+                No hotels selected yet.
+            </p>
+        <% } else { %>
+            <div class="trips-grid" style="margin-top: 16px;">
+                <% for (java.util.HashMap<String, String> h : selectedHotels) { %>
+                    <div class="trip-card">
+                        <% if (h.get("thumbnail_url") != null && !h.get("thumbnail_url").isEmpty()) { %>
+                            <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
+                                <img src="<%= h.get("thumbnail_url") %>" alt="Hotel Thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                        <% } else { %>
+                            <div class="trip-icon planned">&#127976;</div>
+                        <% } %>
+                        <div class="trip-details">
+                            <div class="trip-name"><%= h.get("hotel_name") %></div>
+                            <div class="trip-route"><%= h.get("location") %></div>
+                            <div class="trip-route"><%= h.get("check_in_date") %> &rarr; <%= h.get("check_out_date") %></div>
+                        </div>
+                        <div class="trip-meta">
+                            <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(h.get("total_cost"))) %></div>
+                            <div class="trip-status status-<%= h.get("booking_status") %>"><%= h.get("booking_status") %></div>
+                            <a href="remove_hotel.jsp?tripId=<%= tripId %>&seq=<%= h.get("seq") %>&hotelID=<%= h.get("hotelID") %>"
+                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
         <div class="hero-actions" style="justify-content: flex-start; margin-top: 18px;">
             <a href="browse_hotels.jsp?tripId=<%= tripId %>" class="btn btn-primary">Browse Hotels</a>
         </div>

@@ -80,7 +80,7 @@ CREATE TABLE Hotel_Listing (
     FOREIGN KEY (company_userID) REFERENCES Company(userID) ON DELETE SET NULL
 );
 
-CREATE TABLE Transport_Listing (
+CREATE TABLE Transport_Listing ( 
     transportID INT AUTO_INCREMENT PRIMARY KEY,
     company_userID INT,
     transport_type ENUM('bus', 'plane', 'train') NOT NULL,
