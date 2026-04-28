@@ -42,6 +42,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
+        // First check if this is a traveler login (has a Traveler record)
         pstmt = con.prepareStatement(
             "SELECT u.userID, u.username, t.firstName, t.lastName " +
             "FROM Users u " +
@@ -51,7 +52,7 @@
         pstmt.setString(1, username.trim());
         pstmt.setString(2, hashedPassword);
         rs = pstmt.executeQuery();
-        if (rs.next()) 
+        if (rs.next())
         {
             int userID       = rs.getInt("userID");
             String uname     = rs.getString("username");
@@ -69,14 +70,44 @@
             userSession.setAttribute("lastName", lastName);
 
             response.sendRedirect("dashboard.jsp");
-        } 
-        else 
+        }
+        else
         {
             rs.close();
             pstmt.close();
-            con.close();
 
-            response.sendRedirect("login.jsp?error=Invalid+username+or+password.");
+            // Check if this is an admin login (Admin table, no Traveler record needed)
+            pstmt = con.prepareStatement(
+                "SELECT u.userID, u.username FROM Users u " +
+                "JOIN Admin a ON u.userID = a.userID " +
+                "WHERE u.username = ? AND u.password = ? AND u.account_status = 'active'"
+            );
+            pstmt.setString(1, username.trim());
+            pstmt.setString(2, hashedPassword);
+            rs = pstmt.executeQuery();
+            if (rs.next())
+            {
+                int userID   = rs.getInt("userID");
+                String uname = rs.getString("username");
+
+                rs.close();
+                pstmt.close();
+                con.close();
+
+                HttpSession userSession = request.getSession(true);
+                userSession.setAttribute("userID", userID);
+                userSession.setAttribute("username", uname);
+
+                response.sendRedirect("admin_dashboard.jsp");
+            }
+            else
+            {
+                rs.close();
+                pstmt.close();
+                con.close();
+
+                response.sendRedirect("login.jsp?error=Invalid+username+or+password.");
+            }
         }
     } 
     catch (Exception e) 
