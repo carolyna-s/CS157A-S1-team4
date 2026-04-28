@@ -42,6 +42,16 @@
                 <label>Password</label>
                 <input type="password" name="password" placeholder="Minimum 8 characters" required>
             </div>
+            <div class="form-group">
+                <label>Account Type</label>
+                <select name="accountType" id="accountType" onchange="toggleFields()" required
+                    style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                    <option value="traveler">Traveler</option>
+                    <option value="company">Company</option>
+                </select>
+            </div>     
+            
+                  
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
