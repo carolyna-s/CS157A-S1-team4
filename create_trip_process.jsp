@@ -49,6 +49,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
+        // create trip using the info
         pstmt = con.prepareStatement(
             "INSERT INTO Trip (userID, trip_name, start_location, destination, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, 'planned')",
             Statement.RETURN_GENERATED_KEYS
