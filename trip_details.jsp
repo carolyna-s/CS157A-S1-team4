@@ -296,6 +296,13 @@
     </div>
     <div class="card card-wide" style="margin-bottom: 24px;">
         <h2>Lodging</h2>
+        <%
+            String hotelError = request.getParameter("hotelError");
+            if (hotelError != null) { //error occurs
+        %>
+            <div class="alert alert-error" style="margin-top: 16px;"><%= hotelError %></div>
+        <% } %>
+        
         <% if (selectedHotels.isEmpty()) { %>
             <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">
                 No hotels selected yet.
@@ -331,6 +338,21 @@
         </div>
     </div>
 
+
+    <% if (!"booked".equals(status)) { %>
+    <div class="card card-wide" style="margin-bottom: 24px;">
+        <h2>Ready to Book Your Trip?</h2>
+        <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">
+             
+        </p>
+        <form action = book_trip.jsp method="POST" style="margin-top: 8px;">
+        <input type="hidden" name="tripId" value="<%= tripId %>">
+        <button type="submit" class="btn btn-secondary">Book Trip</button>
+        
+        </form>
+    </div>
+    <% } %>
+
     <% if (!"cancelled".equals(status)) { %>
     <div class="card card-wide" style="margin-bottom: 24px;">
         <h2>Cancel Trip</h2>
@@ -344,6 +366,7 @@
     </form>
     </div>
     <% } %>
+    
     <div class="pond-footer">
         <p>Travelog &copy; 2026 — Team 4</p>
     </div>
