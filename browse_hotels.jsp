@@ -184,10 +184,11 @@
                     // found hotels
                     else 
                     {
-                       // delete outdated /duplicates
+                        // delete outdated /duplicates that are not actively booked
                         pstmt = con.prepareStatement(
                             "DELETE FROM Hotel_Listing " +
-                            "WHERE location = ? AND company_userID IS NULL"
+                            "WHERE location = ? AND company_userID IS NULL " +
+                            "AND hotelID NOT IN (SELECT hotelID FROM Trip_Hotels)"
                         );
                         pstmt.setString(1, searchLoc.trim().toUpperCase());
                         pstmt.executeUpdate();
