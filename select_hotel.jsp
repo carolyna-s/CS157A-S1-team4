@@ -31,7 +31,29 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
-        // Get the price from the listing
+        //check hotels date overlap
+        pstmt = con.prepareStatement(
+            "SELECT COUNT(*) AS overlap_count FROM Trip_Hotels " +
+            "WHERE tripID = ? AND ? < check_out_date AND ? > check_in_date"
+        );
+        pstmt.setInt(1, tripId);
+        pstmt.setString(2, inDate);
+        pstmt.setString(3, outDate);
+        rs = pstmt.executeQuery();
+        
+        int overlapCount = 0; 
+        if (rs.next()) {
+            overlapCount = rs.getInt("overlap_count");
+        }
+        rs.close();
+        pstmt.close();
+
+        if (overlapCount > 0) { //if selected dates overlap...
+            con.close();
+            response.sendRedirect("trip_details.jsp?tripId=" + tripId + "&hotelError=Selected+dates+overlap+with+an+already+booked+hotel.");
+            return;
+        }
+        // get price from listing
         pstmt = con.prepareStatement("SELECT price_per_night FROM Hotel_Listing WHERE hotelID = ?");
         pstmt.setInt(1, hotelID);
         rs = pstmt.executeQuery();
@@ -43,7 +65,7 @@
         rs.close();
         pstmt.close();
 
-        // Get next sequence number (MAX is null when trip has no rows yet)
+        // get max sequence number
         pstmt = con.prepareStatement(
             "SELECT MAX(trip_hotel_sequence_num) AS max_seq FROM Trip_Hotels WHERE tripID = ?"
         );
@@ -60,7 +82,7 @@
         rs.close();
         pstmt.close();
 
-        // Insert into Trip_Hotel
+        // insert into Trip_Hotel
         pstmt = con.prepareStatement(
             "INSERT INTO Trip_Hotels (trip_hotel_sequence_num, tripID, hotelID, check_in_date, check_out_date, booked_price_per_night,total_cost, booking_status) " +
             "VALUES (?, ?, ?, ?, ?,?, ?* GREATEST(1,DATEDIFF(?,?)),'planned')"
