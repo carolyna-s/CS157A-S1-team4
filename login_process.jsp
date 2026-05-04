@@ -104,9 +104,43 @@
             {
                 rs.close();
                 pstmt.close();
-                con.close();
 
-                response.sendRedirect("login.jsp?error=Invalid+username+or+password.");
+                // Check if this is a company login
+                pstmt = con.prepareStatement(
+                    "SELECT u.userID, u.username, c.name, c.approval_status " +
+                    "FROM Users u JOIN Company c ON u.userID = c.userID " +
+                    "WHERE u.username = ? AND u.password = ? AND u.account_status = 'active'"
+                );
+                pstmt.setString(1, username.trim());
+                pstmt.setString(2, hashedPassword);
+                rs = pstmt.executeQuery();
+                if (rs.next())
+                {
+                    int userID            = rs.getInt("userID");
+                    String uname          = rs.getString("username");
+                    String companyName    = rs.getString("name");
+                    String approvalStatus = rs.getString("approval_status");
+
+                    rs.close();
+                    pstmt.close();
+                    con.close();
+
+                    HttpSession userSession = request.getSession(true);
+                    userSession.setAttribute("userID", userID);
+                    userSession.setAttribute("username", uname);
+                    userSession.setAttribute("companyName", companyName);
+                    userSession.setAttribute("approvalStatus", approvalStatus);
+                    userSession.setAttribute("userType", "company");
+
+                    response.sendRedirect("company_dashboard.jsp");
+                }
+                else
+                {
+                    rs.close();
+                    pstmt.close();
+                    con.close();
+                    response.sendRedirect("login.jsp?error=Invalid+username+or+password.");
+                }
             }
         }
     } 

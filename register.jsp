@@ -53,25 +53,71 @@
             
                   
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="form-group">
-                    <label>First Name</label>
-                    <input type="text" name="firstName" placeholder="First" required>
+            <!-- Traveler fields -->
+            <div id="travelerFields">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="firstName" id="firstName" placeholder="First" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="lastName" id="lastName" placeholder="Last" required>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Last Name</label>
-                    <input type="text" name="lastName" placeholder="Last" required>
+                    <label>Home Location</label>
+                    <input type="text" name="location" id="location" placeholder="City" required>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Home Location</label>
-                <input type="text" name="location" placeholder="City" required>
+            <!-- Company fields -->
+            <div id="companyFields" style="display:none;">
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" name="companyName" id="companyName" placeholder="e.g. Marriott Hotels">
+                </div>
+                <div class="form-group">
+                    <label>Business Type</label>
+                    <select name="businessType" id="businessType"
+                        style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                        <option value="hotel">Hotel</option>
+                        <option value="transportation">Transportation</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Phone (optional)</label>
+                    <input type="text" name="phone" placeholder="e.g. 555-123-4567">
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary btn-full">Create Account</button>
 
         </form>
+
+        <script>
+        function toggleFields() {
+            var type = document.getElementById('accountType').value;
+            var tf = document.getElementById('travelerFields');
+            var cf = document.getElementById('companyFields');
+            if (type === 'company') {
+                tf.style.display = 'none';
+                cf.style.display = 'block';
+                document.getElementById('firstName').removeAttribute('required');
+                document.getElementById('lastName').removeAttribute('required');
+                document.getElementById('location').removeAttribute('required');
+                document.getElementById('companyName').setAttribute('required', 'required');
+            } else {
+                tf.style.display = 'block';
+                cf.style.display = 'none';
+                document.getElementById('firstName').setAttribute('required', 'required');
+                document.getElementById('lastName').setAttribute('required', 'required');
+                document.getElementById('location').setAttribute('required', 'required');
+                document.getElementById('companyName').removeAttribute('required');
+            }
+        }
+        </script>
 
         <div class="form-divider">or</div>
 
