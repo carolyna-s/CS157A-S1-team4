@@ -5,19 +5,39 @@
 <%@ include file="/WEB-INF/db_config.jsp" %>
 
 <%
-    String username = request.getParameter("username");
-    String email = request.getParameter("email");
-    String password = request.getParameter("password");
-    String firstName = request.getParameter("firstName");
-    String lastName = request.getParameter("lastName");
-    String location = request.getParameter("location");
+    String username    = request.getParameter("username");
+    String email       = request.getParameter("email");
+    String password    = request.getParameter("password");
+    String accountType = request.getParameter("accountType");
+    if (accountType == null) accountType = "traveler";
 
-    if (username == null || username.trim().isEmpty() || email == null    || email.trim().isEmpty() ||
-        password == null || password.trim().isEmpty() || firstName == null || firstName.trim().isEmpty() ||
-        lastName == null  || lastName.trim().isEmpty() || location == null  || location.trim().isEmpty()) 
-    {
+    String firstName   = request.getParameter("firstName");
+    String lastName    = request.getParameter("lastName");
+    String location    = request.getParameter("location");
+    String companyName = request.getParameter("companyName");
+    String businessType = request.getParameter("businessType");
+    String phone       = request.getParameter("phone");
+
+    if (username == null || username.trim().isEmpty() ||
+        email == null    || email.trim().isEmpty()    ||
+        password == null || password.trim().isEmpty()) {
         response.sendRedirect("register.jsp?error=All+fields+are+required.");
         return;
+    }
+
+    if ("company".equals(accountType)) {
+        if (companyName == null || companyName.trim().isEmpty() ||
+            businessType == null || businessType.trim().isEmpty()) {
+            response.sendRedirect("register.jsp?error=Company+name+and+business+type+are+required.");
+            return;
+        }
+    } else {
+        if (firstName == null || firstName.trim().isEmpty() ||
+            lastName == null  || lastName.trim().isEmpty()  ||
+            location == null  || location.trim().isEmpty()) {
+            response.sendRedirect("register.jsp?error=All+fields+are+required.");
+            return;
+        }
     }
 
     if (!email.contains("@") || !email.contains(".")) 
@@ -96,22 +116,37 @@
         rs.close();
         pstmt.close();
 
-        pstmt = con.prepareStatement(
-            "INSERT INTO Traveler (userID, firstName, lastName, current_location) VALUES (?, ?, ?, ?)"
-        );
-        pstmt.setInt(1, newUserID);
-        pstmt.setString(2, firstName.trim());
-        pstmt.setString(3, lastName.trim());
-        pstmt.setString(4, location.trim());
-        pstmt.executeUpdate();
-        pstmt.close();
+        if ("company".equals(accountType)) {
+            pstmt = con.prepareStatement(
+                "INSERT INTO Company (userID, name, business_type, phone, approval_status) VALUES (?, ?, ?, ?, 'pending')"
+            );
+            pstmt.setInt(1, newUserID);
+            pstmt.setString(2, companyName.trim());
+            pstmt.setString(3, businessType.trim());
+            pstmt.setString(4, (phone != null && !phone.trim().isEmpty()) ? phone.trim() : null);
+            pstmt.executeUpdate();
+            pstmt.close();
 
-        pstmt = con.prepareStatement(
-            "INSERT INTO Is_A_Traveller (userID) VALUES (?)"
-        );
-        pstmt.setInt(1, newUserID);
-        pstmt.executeUpdate();
-        pstmt.close();
+            pstmt = con.prepareStatement("INSERT INTO Is_A_Company (userID) VALUES (?)");
+            pstmt.setInt(1, newUserID);
+            pstmt.executeUpdate();
+            pstmt.close();
+        } else {
+            pstmt = con.prepareStatement(
+                "INSERT INTO Traveler (userID, firstName, lastName, current_location) VALUES (?, ?, ?, ?)"
+            );
+            pstmt.setInt(1, newUserID);
+            pstmt.setString(2, firstName.trim());
+            pstmt.setString(3, lastName.trim());
+            pstmt.setString(4, location.trim());
+            pstmt.executeUpdate();
+            pstmt.close();
+
+            pstmt = con.prepareStatement("INSERT INTO Is_A_Traveller (userID) VALUES (?)");
+            pstmt.setInt(1, newUserID);
+            pstmt.executeUpdate();
+            pstmt.close();
+        }
 
         con.close();
         response.sendRedirect("login.jsp?success=Account+created+successfully.+Please+sign+in.");
