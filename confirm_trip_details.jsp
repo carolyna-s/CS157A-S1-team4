@@ -328,6 +328,15 @@
             <input type="hidden" name="grandTotal" value="<%= grandTotal %>">
 
             <div class="form-group">
+                <label>Payment Method</label>
+                <select name="payment_method" required style="width:100%; padding:13px 16px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.95rem; color:var(--charcoal); background:var(--cream); outline:none;">
+                    <option value="visa">Visa</option>
+                    <option value="mastercard">Mastercard</option>
+                    <option value="amex">Amex</option>
+                    <option value="paypal">PayPal</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Cardholder Name</label>
                 <input type="text" name="trip_name" placeholder="Cardholder First and Last Name" required>
             </div>

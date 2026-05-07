@@ -72,6 +72,7 @@
 
     if (status == null) status = "planned";
     String statusClass = status.toLowerCase();
+    boolean isLocked = "booked".equals(status) || "cancelled".equals(status);
 
     // Load selected transportation for this trip
     java.util.ArrayList<java.util.HashMap<String, String>> selectedTransport = new java.util.ArrayList<>();
@@ -178,6 +179,11 @@
         <div style="margin-top: 12px;">
             <span class="trip-status status-<%= statusClass %>"><%= status %></span>
         </div>
+        <% if ("booked".equals(status) || "cancelled".equals(status)) { %>
+        <div class="hero-actions" style="margin-top: 20px;">
+            <a href="receipt.jsp?tripId=<%= tripId %>" class="btn btn-secondary">View Receipt</a>
+        </div>
+        <% } %>
     </div>
 
     <div class="card card-wide" style="margin-bottom: 24px;">
@@ -204,32 +210,32 @@
             <div class="form-group">
                 <label>Trip Name</label>
                 <!-- //makes it so that if trip booked we cant change inner details -->
-                <input type="text" name="trip_name" value="<%= tripName %>" <%= "booked".equals(status) ? "readonly" : "required" %>>
+                <input type="text" name="trip_name" value="<%= tripName %>" <%= isLocked ? "readonly" : "required" %>>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                     <label>From</label>
-                    <input type="text" name="start_location" value="<%= startLocation %>" <%= "booked".equals(status) ? "readonly" : "required" %>>
+                    <input type="text" name="start_location" value="<%= startLocation %>" <%= isLocked ? "readonly" : "required" %>>
                 </div>
                 <div class="form-group">
                     <label>To</label>
-                    <input type="text" name="destination" value="<%= destination %>" <%= "booked".equals(status) ? "readonly" : "required" %>>
+                    <input type="text" name="destination" value="<%= destination %>" <%= isLocked ? "readonly" : "required" %>>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                     <label>Start Date</label>
-                    <input type="date" name="start_date" value="<%= startDate %>" <%= "booked".equals(status) ? "readonly" : "required" %>>
+                    <input type="date" name="start_date" value="<%= startDate %>" <%= isLocked ? "readonly" : "required" %>>
                 </div>
                 <div class="form-group">
                     <label>End Date</label>
-                    <input type="date" name="end_date" value="<%= endDate %>" <%= "booked".equals(status) ? "readonly" : "required" %>>
+                    <input type="date" name="end_date" value="<%= endDate %>" <%= isLocked ? "readonly" : "required" %>>
                 </div>
             </div>
 
-            <% if (!"booked".equals(status)) { %>
+            <% if (!isLocked) { %>
             <button type="submit" class="btn btn-primary">Save Changes</button>
             <% } %>
         </form>
@@ -266,7 +272,7 @@
                         <div class="trip-meta">
                             <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(t.get("price"))) %></div>
                             <div class="trip-status status-<%= t.get("booking_status") %>"><%= t.get("booking_status") %></div>
-                            <% if (!"booked".equals(status)) { %>
+                            <% if (!isLocked) { %>
                             <a href="remove_transportation.jsp?tripId=<%= tripId %>&seq=<%= t.get("seq") %>&transportID=<%= t.get("transportID") %>"
                                class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
                             <% } %>
@@ -275,7 +281,7 @@
                 <% } %>
             </div>
         <% } %>
-        <% if (!"booked".equals(status)) { %>
+        <% if (!isLocked) { %>
         <div class="hero-actions" style="justify-content: flex-start; margin-top: 18px;">
             <a href="browse_transportation.jsp?tripId=<%= tripId %>&direction=outbound" class="btn btn-primary">Browse Outbound Flights</a>
         </div>
@@ -301,7 +307,7 @@
                         <div class="trip-meta">
                             <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(t.get("price"))) %></div>
                             <div class="trip-status status-<%= t.get("booking_status") %>"><%= t.get("booking_status") %></div>
-                            <% if (!"booked".equals(status)) { %>
+                            <% if (!isLocked) { %>
                             <a href="remove_transportation.jsp?tripId=<%= tripId %>&seq=<%= t.get("seq") %>&transportID=<%= t.get("transportID") %>"
                                class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
                             <% } %>
@@ -310,7 +316,7 @@
                 <% } %>
             </div>
         <% } %>
-        <% if (!"booked".equals(status)) { %>
+        <% if (!isLocked) { %>
         <div class="hero-actions" style="justify-content: flex-start; margin-top: 18px;">
             <a href="browse_transportation.jsp?tripId=<%= tripId %>&direction=return" class="btn btn-primary">Browse Return Flights</a>
         </div>
@@ -348,7 +354,7 @@
                         <div class="trip-meta">
                             <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(h.get("total_cost"))) %></div>
                             <div class="trip-status status-<%= h.get("booking_status") %>"><%= h.get("booking_status") %></div>
-                            <% if (!"booked".equals(status)) { %>
+                            <% if (!isLocked) { %>
                             <a href="remove_hotel.jsp?tripId=<%= tripId %>&seq=<%= h.get("seq") %>&hotelID=<%= h.get("hotelID") %>"
                                class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
                             <% } %>
@@ -357,7 +363,7 @@
                 <% } %>
             </div>
         <% } %>
-        <% if (!"booked".equals(status)) { %>
+        <% if (!isLocked) { %>
         <div class="hero-actions" style="justify-content: flex-start; margin-top: 18px;">
             <a href="browse_hotels.jsp?tripId=<%= tripId %>" class="btn btn-primary">Browse Hotels</a>
         </div>
@@ -365,7 +371,7 @@
     </div>
 
 
-    <% if (!"booked".equals(status)) { %>
+    <% if ("planned".equals(status)) { %>
     <div class="card card-wide" style="margin-bottom: 24px;">
         <h2>Ready to Book Your Trip?</h2>
         <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">

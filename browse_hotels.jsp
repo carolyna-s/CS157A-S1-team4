@@ -377,6 +377,54 @@
         </div>
     <% } %>
 
+    <% if (companyListings.size() > 0) { %>
+        <div class="card card-wide" style="margin-bottom: 24px;">
+            <h2>Special Listings</h2>
+            <p style="color: var(--text-muted); font-weight: 500; font-size: 0.85rem; margin-top: 4px;">Posted by verified companies on Travelog.</p>
+            <div class="trips-grid" style="margin-top: 16px;">
+                <% for (HashMap<String, String> listing : companyListings) {
+                    double cPrice = 0;
+                    try { cPrice = Double.parseDouble(listing.get("price_per_night")); } catch (Exception ignored) {}
+                    long cNights = 0;
+                    try {
+                        if (inDate != null && outDate != null) {
+                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                            long diff = sdf.parse(outDate).getTime() - sdf.parse(inDate).getTime();
+                            cNights = diff / (1000L * 60 * 60 * 24);
+                        }
+                    } catch (Exception ignored) {}
+                    double cTotal = cPrice * cNights;
+                %>
+                    <div class="trip-card" style="flex-direction: row; align-items: center; gap: 16px;">
+                        <div class="trip-icon booked">&#127976;</div>
+                        <div class="trip-details" style="flex: 1;">
+                            <div class="trip-name"><%= listing.get("hotel_name") %></div>
+                            <div class="trip-route"><%= listing.get("location") %></div>
+                            <% if (listing.get("rating") != null && !listing.get("rating").equals("0.0")) { %>
+                            <div class="trip-route"><%= String.format("%.1f", Double.parseDouble(listing.get("rating"))) %> &#9733;</div>
+                            <% } %>
+                        </div>
+                        <div style="text-align: right;">
+                            <% if (cNights > 0) { %>
+                            <div class="trip-name" style="color: var(--accent); font-size: 1.1rem;">$<%= String.format("%.2f", cTotal) %> total</div>
+                            <div class="trip-route" style="margin-top: 2px;">$<%= String.format("%.2f", cPrice) %>/night &middot; <%= cNights %> night<%= cNights != 1 ? "s" : "" %></div>
+                            <% } else { %>
+                            <div class="trip-name" style="color: var(--accent); font-size: 1.1rem;">$<%= String.format("%.2f", cPrice) %>/night</div>
+                            <% } %>
+                            <form action="select_hotel.jsp" method="POST" style="margin-top: 8px;">
+                                <input type="hidden" name="tripId" value="<%= tripId %>">
+                                <input type="hidden" name="hotelID" value="<%= listing.get("hotelID") %>">
+                                <input type="hidden" name="check_in_date" value="<%= inDate != null ? inDate : "" %>">
+                                <input type="hidden" name="check_out_date" value="<%= outDate != null ? outDate : "" %>">
+                                <button type="submit" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.8rem;">Select</button>
+                            </form>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    <% } %>
+
     <% if (searched && hotelResults.size() > 0) { %>
         <div class="card card-wide" style="margin-bottom: 24px;">
             <h2>Hotels & Lodging Results
@@ -384,9 +432,41 @@
                     <span style="font-size: 0.7rem; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-weight: 500;">(cached — prices may have changed)</span>
                 <% } %>
             </h2>
-            <div class="trips-grid" style="margin-top: 16px;">
-                <% for (HashMap<String, String> hotel : hotelResults) { %>
-                    <div class="trip-card" style="flex-direction: row; align-items: center; gap: 16px;">
+
+            <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:16px; padding:16px; background:var(--cream); border-radius:var(--radius); align-items:flex-end;">
+                <div>
+                    <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">Max Price / Night</label>
+                    <input type="number" id="hotel-max-price" placeholder="Any" min="0" oninput="filterHotels()" style="width:130px; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--warm-white);">
+                </div>
+                <div>
+                    <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">Min Rating</label>
+                    <select id="hotel-min-rating" onchange="filterHotels()" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--warm-white); color:var(--charcoal);">
+                        <option value="0">Any Rating</option>
+                        <option value="3">3+ &#9733;</option>
+                        <option value="3.5">3.5+ &#9733;</option>
+                        <option value="4">4+ &#9733;</option>
+                        <option value="4.5">4.5+ &#9733;</option>
+                    </select>
+                </div>
+                <button onclick="document.getElementById('hotel-max-price').value=''; document.getElementById('hotel-min-rating').value='0'; filterHotels();" class="btn btn-secondary" style="padding:8px 16px; font-size:0.82rem;">Reset</button>
+            </div>
+            <p id="hotel-no-results" style="display:none; margin-top:12px; color:var(--text-muted); font-weight:500; font-size:0.9rem;">No hotels match your filters.</p>
+
+            <div class="trips-grid" style="margin-top: 16px;" id="hotel-grid">
+                <% for (HashMap<String, String> hotel : hotelResults) {
+                    double hPrice = 0;
+                    try { hPrice = Double.parseDouble(hotel.get("price_per_night")); } catch (Exception ignored) {}
+                    double hRating = 0;
+                    try { hRating = Double.parseDouble(hotel.get("rating")); } catch (Exception ignored) {}
+                    long hNights = 0;
+                    try {
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                        long diff = sdf.parse(outDate).getTime() - sdf.parse(inDate).getTime();
+                        hNights = diff / (1000L * 60 * 60 * 24);
+                    } catch (Exception ignored) {}
+                    double hTotal = hPrice * hNights;
+                %>
+                    <div class="trip-card" data-price="<%= hPrice %>" data-rating="<%= hRating %>" style="flex-direction: row; align-items: center; gap: 16px;">
                         <div class="trip-icon planned" style="padding: 0; overflow: hidden; background: transparent; border: none;">
         <% if (hotel.get("thumbnail_url") != null && !hotel.get("thumbnail_url").isEmpty()) { %>
             <img src="<%= hotel.get("thumbnail_url") %>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
@@ -402,7 +482,8 @@
                         </div>
                         
                         <div style="text-align: right;">
-                            <div class="trip-name" style="color: var(--accent); font-size: 1.1rem;">$<%= String.format("%.2f", Double.parseDouble(hotel.get("price_per_night"))) %></div>
+                            <div class="trip-name" style="color: var(--accent); font-size: 1.1rem;">$<%= String.format("%.2f", hTotal) %> total</div>
+                            <div class="trip-route" style="margin-top: 2px;">$<%= String.format("%.2f", hPrice) %>/night &middot; <%= hNights %> night<%= hNights != 1 ? "s" : "" %></div>
                             <form action="select_hotel.jsp" method="POST" style="margin-top: 8px;">
                                 <input type="hidden" name="tripId" value="<%= tripId %>">
                                 <input type="hidden" name="hotelID" value="<%= hotel.get("hotelID") %>">
@@ -414,8 +495,28 @@
                     </div>
                 <% } %>
             </div>
+            </div>
         </div>
     <% } %>
 </div>
+
+<script>
+function filterHotels() {
+    var maxPrice  = parseFloat(document.getElementById('hotel-max-price').value);
+    var minRating = parseFloat(document.getElementById('hotel-min-rating').value);
+    var cards     = document.querySelectorAll('#hotel-grid .trip-card');
+    var visible   = 0;
+    cards.forEach(function(card) {
+        var price  = parseFloat(card.getAttribute('data-price'));
+        var rating = parseFloat(card.getAttribute('data-rating'));
+        var priceOk  = isNaN(maxPrice)  || price  <= maxPrice;
+        var ratingOk = isNaN(minRating) || rating >= minRating;
+        var show = priceOk && ratingOk;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    document.getElementById('hotel-no-results').style.display = (visible === 0 && cards.length > 0) ? 'block' : 'none';
+}
+</script>
 </body>
 </html>

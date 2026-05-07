@@ -12,7 +12,8 @@
     }
     String tripIdParam= request.getParameter("tripId");
     String totalCostParam = request.getParameter("grandTotal");
-    String paymentMethod = "visa"; 
+    String paymentMethod = request.getParameter("payment_method");
+    if (paymentMethod == null || paymentMethod.trim().isEmpty()) paymentMethod = "visa";
 
     if (tripIdParam == null || totalCostParam == null) {
         response.sendRedirect("view_trips.jsp");
@@ -65,7 +66,7 @@
 
         con.close();
 
-        response.sendRedirect("trip_details.jsp?tripId=" + tripId + "&success=Payment+successful+and+trip+booked.");
+        response.sendRedirect("receipt.jsp?tripId=" + tripId);
 
     } catch (Exception e) {
         e.printStackTrace();
