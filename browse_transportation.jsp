@@ -397,9 +397,37 @@
                     <span style="font-size: 0.7rem; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-weight: 500;">(cached — prices may have changed)</span>
                 <% } %>
             </h2>
-            <div class="trips-grid" style="margin-top: 16px;">
-                <% for (HashMap<String, String> flight : flightResults) { %>
-                    <div class="trip-card" style="flex-direction: row; align-items: center; gap: 16px;">
+
+            <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:16px; padding:16px; background:var(--cream); border-radius:var(--radius); align-items:flex-end;">
+                <div>
+                    <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">Max Price</label>
+                    <input type="number" id="flight-max-price" placeholder="Any" min="0" oninput="filterFlights()" style="width:120px; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--warm-white);">
+                </div>
+                <div>
+                    <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">Departure Time</label>
+                    <select id="flight-time" onchange="filterFlights()" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--warm-white); color:var(--charcoal);">
+                        <option value="any">Any Time</option>
+                        <option value="morning">Morning (6am–12pm)</option>
+                        <option value="afternoon">Afternoon (12pm–6pm)</option>
+                        <option value="evening">Evening (6pm+)</option>
+                    </select>
+                </div>
+                <button onclick="document.getElementById('flight-max-price').value=''; document.getElementById('flight-time').value='any'; filterFlights();" class="btn btn-secondary" style="padding:8px 16px; font-size:0.82rem;">Reset</button>
+            </div>
+            <p id="flight-no-results" style="display:none; margin-top:12px; color:var(--text-muted); font-weight:500; font-size:0.9rem;">No flights match your filters.</p>
+
+            <div class="trips-grid" style="margin-top: 16px;" id="flight-grid">
+                <% for (HashMap<String, String> flight : flightResults) {
+                    double fPrice = 0;
+                    try { fPrice = Double.parseDouble(flight.get("base_cost")); } catch (Exception ignored) {}
+                    int fHour = 0;
+                    try {
+                        String dt = flight.get("departure_time");
+                        if (dt != null && dt.contains(" ")) dt = dt.split(" ")[1];
+                        if (dt != null && dt.length() >= 2) fHour = Integer.parseInt(dt.substring(0, 2));
+                    } catch (Exception ignored) {}
+                %>
+                    <div class="trip-card" data-price="<%= fPrice %>" data-hour="<%= fHour %>" style="flex-direction: row; align-items: center; gap: 16px;">
                         <div class="trip-icon planned">&#9992;</div>
                         <div class="trip-details" style="flex: 1;">
                             <div class="trip-name"><%= flight.get("transport_name") %></div>
@@ -419,6 +447,7 @@
                 <% } %>
             </div>
         </div>
+    </div>
     <% } %>
 
     <% if (companyListings.size() > 0) { %>
@@ -454,5 +483,26 @@
     </div>
 
 </div>
+<script>
+function filterFlights() {
+    var maxPrice  = parseFloat(document.getElementById('flight-max-price').value);
+    var timeSlot  = document.getElementById('flight-time').value;
+    var cards     = document.querySelectorAll('#flight-grid .trip-card');
+    var visible   = 0;
+    cards.forEach(function(card) {
+        var price = parseFloat(card.getAttribute('data-price'));
+        var hour  = parseInt(card.getAttribute('data-hour'));
+        var priceOk = isNaN(maxPrice) || price <= maxPrice;
+        var timeOk  = true;
+        if (timeSlot === 'morning')   timeOk = hour >= 6  && hour < 12;
+        if (timeSlot === 'afternoon') timeOk = hour >= 12 && hour < 18;
+        if (timeSlot === 'evening')   timeOk = hour >= 18;
+        var show = priceOk && timeOk;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    document.getElementById('flight-no-results').style.display = (visible === 0 && cards.length > 0) ? 'block' : 'none';
+}
+</script>
 </body>
 </html>
