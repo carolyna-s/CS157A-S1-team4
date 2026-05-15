@@ -49,7 +49,6 @@
 <div class="page-wrapper">
 
     <div style="width: 100%; max-width: 820px; display: flex; justify-content: flex-end; gap: 12px; margin-bottom: -32px;">
-        <a href="submit_query.jsp" class="btn btn-secondary">Submit Query</a>
         <a href="logout.jsp" class="btn btn-secondary">Logout</a>
         <a href="delete_account.jsp" class="btn btn-danger">Delete Account</a>
     </div>
@@ -110,6 +109,10 @@
             if (pstmt != null) try { pstmt.close(); } catch(Exception ex) {}
             if (con != null) try { con.close(); } catch(Exception ex) {}
         %>
+    </div>
+
+    <div style="width: 100%; max-width: 820px; display: flex; justify-content: center; margin-top: 24px;">
+        <a href="submit_query.jsp" class="btn btn-secondary">Need help? Submit a Support Query</a>
     </div>
 
     <div class="pond-footer">
