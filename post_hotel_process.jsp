@@ -8,27 +8,41 @@
         return;
     }
 
-    String hotelName   = request.getParameter("hotel_name");
-    String location    = request.getParameter("location");
-    String description = request.getParameter("description");
-    String priceStr    = request.getParameter("price_per_night");
-    String ratingStr   = request.getParameter("rating");
+    // pull form fields from the Post a Hotel Listing form on company_dashboard.jsp
+    String hotelName    = request.getParameter("hotel_name");
+    String location     = request.getParameter("location");
+    String description  = request.getParameter("description");
+    String priceStr     = request.getParameter("price_per_night");
+    String ratingStr    = request.getParameter("rating");
+    String discountStr  = request.getParameter("discount_percent");// optional
+    String availability = request.getParameter("availability");// dropdown
+    if (availability == null || availability.trim().isEmpty()) availability = "available"; // default
 
     if (hotelName == null || hotelName.trim().isEmpty() ||
         location == null  || location.trim().isEmpty()  ||
-        priceStr == null  || priceStr.trim().isEmpty()) {
+        priceStr == null  || priceStr.trim().isEmpty()) 
+    {
         response.sendRedirect("company_dashboard.jsp?error=Please+fill+in+all+required+fields.");
         return;
     }
 
     double price = 0;
     double rating = 0;
+    double discount = 0;
     try { price = Double.parseDouble(priceStr); } catch (Exception e) {
         response.sendRedirect("company_dashboard.jsp?error=Invalid+price.");
         return;
     }
     if (ratingStr != null && !ratingStr.trim().isEmpty()) {
         try { rating = Double.parseDouble(ratingStr); } catch (Exception e) {}
+    }
+    // discount is optional, so we only validate if they typed something (also has fixed range)
+    if (discountStr != null && !discountStr.trim().isEmpty()) {
+        try { discount = Double.parseDouble(discountStr); } catch (Exception e) {}
+        if (discount < 0 || discount > 100) {
+            response.sendRedirect("company_dashboard.jsp?error=Discount+must+be+between+0+and+100.");
+            return;
+        }
     }
 
     Connection con = null;
@@ -38,8 +52,8 @@
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
         pstmt = con.prepareStatement(
-            "INSERT INTO Hotel_Listing (company_userID, hotel_name, location, description, rating, price_per_night, availability, listing_status, last_fetched) " +
-            "VALUES (?, ?, ?, ?, ?, ?, 'available', 'active', NOW())",
+            "INSERT INTO Hotel_Listing (company_userID, hotel_name, location, description, rating, price_per_night, discount_percent, availability, listing_status, last_fetched) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW())",
             Statement.RETURN_GENERATED_KEYS
         );
         pstmt.setInt(1, userID);
@@ -48,6 +62,8 @@
         pstmt.setString(4, description != null ? description.trim() : "");
         pstmt.setDouble(5, rating);
         pstmt.setDouble(6, price);
+        pstmt.setDouble(7, discount);
+        pstmt.setString(8, availability);
         pstmt.executeUpdate();
 
         ResultSet keys = pstmt.getGeneratedKeys();
