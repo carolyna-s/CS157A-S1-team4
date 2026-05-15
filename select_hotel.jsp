@@ -96,10 +96,16 @@
         pstmt.setDouble(7,price); //price -> total_cost 
         pstmt.setString(8, outDate); // for total_cost calculation
         pstmt.setString(9, inDate); // for total_cost calculation
-        pstmt.executeUpdate(); 
+        pstmt.executeUpdate();
         pstmt.close();
-        con.close();
 
+        pstmt = con.prepareStatement("INSERT IGNORE INTO Includes_Hotel (tripID, hotelID) VALUES (?, ?)");
+        pstmt.setInt(1, tripId);
+        pstmt.setInt(2, hotelID);
+        pstmt.executeUpdate();
+        pstmt.close();
+
+        con.close();
         response.sendRedirect("trip_details.jsp?tripId=" + tripId + "&success=Hotel+added+to+trip.");
 
     } catch (Exception e) {

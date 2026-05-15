@@ -38,13 +38,31 @@
         //insert record into Payments table
         pstmt = con.prepareStatement(
             "INSERT INTO Payments (tripID, userID, amount, payment_method, payment_status, payment_timestamp) " +
-            "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)"
+            "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
+            Statement.RETURN_GENERATED_KEYS
         );
         pstmt.setInt(1, tripId);
         pstmt.setInt(2, userID);
         pstmt.setDouble(3, amount);
         pstmt.setString(4, paymentMethod);
         pstmt.setString(5, "paid");
+        pstmt.executeUpdate();
+
+        ResultSet payKeys = pstmt.getGeneratedKeys();
+        int newPaymentID = 0;
+        if (payKeys.next()) newPaymentID = payKeys.getInt(1);
+        payKeys.close();
+        pstmt.close();
+
+        pstmt = con.prepareStatement("INSERT INTO Makes_Payment (userID, paymentID) VALUES (?, ?)");
+        pstmt.setInt(1, userID);
+        pstmt.setInt(2, newPaymentID);
+        pstmt.executeUpdate();
+        pstmt.close();
+
+        pstmt = con.prepareStatement("INSERT INTO Pays_For (tripID, paymentID) VALUES (?, ?)");
+        pstmt.setInt(1, tripId);
+        pstmt.setInt(2, newPaymentID);
         pstmt.executeUpdate();
         pstmt.close();
         //update status in trip table

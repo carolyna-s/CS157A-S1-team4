@@ -82,8 +82,14 @@
         pstmt.setDouble(5, price);
         pstmt.executeUpdate();
         pstmt.close();
-        con.close();
 
+        pstmt = con.prepareStatement("INSERT IGNORE INTO Includes_Transportation (tripID, transportID) VALUES (?, ?)");
+        pstmt.setInt(1, tripId);
+        pstmt.setInt(2, transportID);
+        pstmt.executeUpdate();
+        pstmt.close();
+
+        con.close();
         response.sendRedirect("trip_details.jsp?tripId=" + tripId + "&success=Transportation+added+to+trip.");
 
     } catch (Exception e) {

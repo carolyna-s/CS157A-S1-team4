@@ -85,10 +85,16 @@
         if (newTripID > 0)
         {
             pstmt.close();
-            con.close();
 
+            pstmt = con.prepareStatement("INSERT INTO Creates (userID, tripID) VALUES (?, ?)");
+            pstmt.setInt(1, userID);
+            pstmt.setInt(2, newTripID);
+            pstmt.executeUpdate();
+            pstmt.close();
+
+            con.close();
             response.sendRedirect("trip_details.jsp?tripId=" + newTripID);
-        } 
+        }
         else 
         {
             pstmt.close();

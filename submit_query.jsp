@@ -56,7 +56,7 @@
                 <textarea name="message_body" rows="6" placeholder="Describe your question or issue..."
                     style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-family:inherit; resize:vertical;" required></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Submit Query</button>
+            <button type="submit" class="btn btn-primary btn-full">Submit Query</button>
         </form>
     </div>
 
