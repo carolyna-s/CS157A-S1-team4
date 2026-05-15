@@ -15,6 +15,10 @@
     String departureTime     = request.getParameter("departure_time");
     String arrivalTime       = request.getParameter("arrival_time");
     String costStr           = request.getParameter("base_cost");
+    // discount + availability are new fields added later per spec
+    String discountStr       = request.getParameter("discount_percent");// optional
+    String availability      = request.getParameter("availability");// dropdown
+    if (availability == null || availability.trim().isEmpty()) availability = "available"; // default fallback
 
     if (transportName == null || transportName.trim().isEmpty() ||
         transportType == null  || transportType.trim().isEmpty() ||
@@ -22,15 +26,26 @@
         arrivalDest == null    || arrivalDest.trim().isEmpty() ||
         departureTime == null  || departureTime.trim().isEmpty() ||
         arrivalTime == null    || arrivalTime.trim().isEmpty() ||
-        costStr == null        || costStr.trim().isEmpty()) {
+        costStr == null        || costStr.trim().isEmpty()) 
+    {
         response.sendRedirect("company_dashboard.jsp?error=Please+fill+in+all+required+fields.");
         return;
     }
 
     double cost = 0;
+    double discount = 0;
     try { cost = Double.parseDouble(costStr); } catch (Exception e) {
         response.sendRedirect("company_dashboard.jsp?error=Invalid+cost.");
         return;
+    }
+
+    // discount validation, we only check if user typed something + fixed range: 0-100
+    if (discountStr != null && !discountStr.trim().isEmpty()) {
+        try { discount = Double.parseDouble(discountStr); } catch (Exception e) {}
+        if (discount < 0 || discount > 100) {
+            response.sendRedirect("company_dashboard.jsp?error=Discount+must+be+between+0+and+100.");
+            return;
+        }
     }
 
     Connection con = null;
@@ -40,8 +55,8 @@
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
         pstmt = con.prepareStatement(
-            "INSERT INTO Transport_Listing (company_userID, transport_type, transport_name, departure_location, arrival_destination, departure_time, arrival_time, base_cost, availability, listing_status, last_fetched) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'available', 'active', NOW())",
+            "INSERT INTO Transport_Listing (company_userID, transport_type, transport_name, departure_location, arrival_destination, departure_time, arrival_time, base_cost, discount_percent, availability, listing_status, last_fetched) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW())",
             Statement.RETURN_GENERATED_KEYS
         );
         pstmt.setInt(1, userID);
@@ -52,6 +67,8 @@
         pstmt.setString(6, departureTime.replace("T", " "));
         pstmt.setString(7, arrivalTime.replace("T", " "));
         pstmt.setDouble(8, cost);
+        pstmt.setDouble(9, discount);
+        pstmt.setString(10, availability);
         pstmt.executeUpdate();
 
         ResultSet keys = pstmt.getGeneratedKeys();

@@ -20,12 +20,15 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
+        // join all 3 tables so we can grab trip rows along with traveler info, then we can order by field per this:  https://dev.mysql.com/doc/refman/8.0/en/string-functions.html#function_field
+        // and this too: https://stackoverflow.com/questions/14104055/ordering-by-specific-field-value-first
         pstmt = con.prepareStatement(
             "SELECT * " +
             "FROM Users u " +
             "JOIN Traveler trv ON u.userID = trv.userID " +
             "JOIN Trip t ON u.userID = t.userID " +
-            "WHERE u.username = ? "
+            "WHERE u.username = ? " +
+            "ORDER BY FIELD(t.status, 'planned', 'booked', 'cancelled'), t.start_date DESC"
         );
         pstmt.setString(1,username);
         rs=pstmt.executeQuery();

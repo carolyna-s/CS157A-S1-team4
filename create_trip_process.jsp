@@ -31,14 +31,25 @@
         response.sendRedirect("create_trip.jsp?error=Please+check+and+submit+date+fields.");
         return;
     }
+    // validate the dates, we use this: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/valueOf
+    // also need to make sure start date isnt in the past + end date is after start
     try {
         java.sql.Date sqlStartDate = java.sql.Date.valueOf(start_date);
         java.sql.Date sqlEndDate = java.sql.Date.valueOf(end_date);
+        // get today date
+        java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
+        java.sql.Date todayDateOnly = java.sql.Date.valueOf(today.toLocalDate());
+        if (sqlStartDate.before(todayDateOnly)) {
+            // per the spec, cant plan a trip in the past
+            response.sendRedirect("create_trip.jsp?error=Start+date+must+be+today+or+later.");
+            return;
+        }
         if (sqlStartDate.after(sqlEndDate)) {
             response.sendRedirect("create_trip.jsp?error=Start+date+must+be+before+end+date.");
             return;
         }
     } catch (IllegalArgumentException e) {
+        // valueOf throws for bad strings
         response.sendRedirect("create_trip.jsp?error=Invalid+date+format.");
         return;
     }

@@ -12,15 +12,18 @@
 <%@ include file="WEB-INF/db_config.jsp" %>
 
 <%
+    // session information
     String username = (String) session.getAttribute("username");
     Integer userID = (Integer) session.getAttribute("userID");
 
+    // error checking + redirect to login if session outdated
     if (username == null) 
     {
         response.sendRedirect("login.jsp");
         return;
     }
 
+    // get tripID (the primary key)
     String tripIdParam = request.getParameter("tripId");
     if (tripIdParam == null) 
     {
@@ -286,16 +289,30 @@
         }
     }
 
+    // company listings (the Special Listings), show what the user actually searched + matches the location snearby
     ArrayList<HashMap<String, String>> companyListings = new ArrayList<>();
+    if (searched) {
     try {
-        if (con == null || con.isClosed()) 
+        if (con == null || con.isClosed())
         {
             Class.forName(DB_DRIVER);
             con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
         }
+        // LIKE both ways, we use CONCAT per this documentation: https://www.w3schools.com/sql/func_sqlserver_concat.asp
+        String depLike = "%" + searchOrigin.trim().toUpperCase() + "%";
+        String arrLike = "%" + searchDest.trim().toUpperCase()  + "%";
         pstmt = con.prepareStatement(
-            "SELECT * FROM Transport_Listing WHERE company_userID IS NOT NULL AND listing_status = 'active' ORDER BY base_cost ASC"
+            "SELECT * FROM Transport_Listing " +
+            "WHERE company_userID IS NOT NULL AND listing_status = 'active' " +
+            "  AND availability = 'available' " +
+            "  AND (departure_location LIKE ? OR ? LIKE CONCAT('%', departure_location, '%')) " +
+            "  AND (arrival_destination LIKE ? OR ? LIKE CONCAT('%', arrival_destination, '%')) " +
+            "ORDER BY base_cost ASC"
         );
+        pstmt.setString(1, depLike);
+        pstmt.setString(2, searchOrigin.trim().toUpperCase());
+        pstmt.setString(3, arrLike);
+        pstmt.setString(4, searchDest.trim().toUpperCase());
         rs = pstmt.executeQuery();
         while (rs.next()) {
             HashMap<String, String> listing = new HashMap<>();
@@ -311,14 +328,12 @@
         rs.close();
         pstmt.close();
     } 
-    catch (Exception e) 
+    catch (Exception e)
     {
         e.printStackTrace();
-    } 
-    finally 
-    {
-        if (con != null) { try { con.close(); } catch(Exception ex) {} }
     }
+    } // end if (searched)
+    if (con != null) { try { con.close(); } catch(Exception ex) {} }
 %>
 
 <!DOCTYPE html>
@@ -411,6 +426,7 @@
                         <option value="afternoon">Afternoon (12pm–6pm)</option>
                         <option value="evening">Evening (6pm+)</option>
                     </select>
+                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">departure airport local time</div>
                 </div>
                 <button onclick="document.getElementById('flight-max-price').value=''; document.getElementById('flight-time').value='any'; filterFlights();" class="btn btn-secondary" style="padding:8px 16px; font-size:0.82rem;">Reset</button>
             </div>

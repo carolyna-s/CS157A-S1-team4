@@ -3,6 +3,7 @@
 <%@ include file="/WEB-INF/db_config.jsp" %>
 
 <%
+    // be signed in to attach transport to a trip
     Integer userID = (Integer) session.getAttribute("userID");
 
     if (userID == null) {
@@ -10,9 +11,10 @@
         return;
     }
 
+    // form fields come from the Select button in browse_transportation.jsp
     String tripIdParam = request.getParameter("tripId");
     String transportIDParam = request.getParameter("transportID");
-    String direction = request.getParameter("direction");
+    String direction = request.getParameter("direction"); // "outbound" or "return"
 
     if (tripIdParam == null || transportIDParam == null || direction == null) {
         response.sendRedirect("view_trips.jsp");
@@ -30,7 +32,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
-        // Get the price from the listing
+        // grab the listed price so we can lock it in (in case the listing price changes later, the user gets the price they saw at booking)
         pstmt = con.prepareStatement("SELECT base_cost FROM Transport_Listing WHERE transportID = ?");
         pstmt.setInt(1, transportID);
         rs = pstmt.executeQuery();
@@ -42,7 +44,16 @@
         rs.close();
         pstmt.close();
 
-        // Get next sequence number (MAX is null when trip has no rows yet)
+        // picking a new transport for the same direction should overwrite the old one
+        pstmt = con.prepareStatement(
+            "DELETE FROM Trip_Transportation WHERE tripID = ? AND direction = ? AND booking_status = 'planned'"
+        );
+        pstmt.setInt(1, tripId);
+        pstmt.setString(2, direction);
+        pstmt.executeUpdate();
+        pstmt.close();
+
+        // figure out the next sequence num for this trip's transport list
         pstmt = con.prepareStatement(
             "SELECT MAX(trip_transport_sequence_num) AS max_seq FROM Trip_Transportation WHERE tripID = ?"
         );
@@ -59,7 +70,7 @@
         rs.close();
         pstmt.close();
 
-        // Insert into Trip_Transportation
+        // finally insert the row, starts as planned until they actually pay
         pstmt = con.prepareStatement(
             "INSERT INTO Trip_Transportation (trip_transport_sequence_num, tripID, transportID, direction, price, booking_status) " +
             "VALUES (?, ?, ?, ?, ?, 'planned')"
