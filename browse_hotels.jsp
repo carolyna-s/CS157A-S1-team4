@@ -276,7 +276,7 @@
         }
     }
 
-    // Special Listings means company-posted hotels + only show after a search + only when posted location matches relatively close
+    // Special Listings means company-posted hotels only show after a search and only when posted location matches relatively close
     ArrayList<HashMap<String, String>> companyListings = new ArrayList<>();
     if (searched) {
     try {

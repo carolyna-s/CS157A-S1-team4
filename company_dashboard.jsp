@@ -94,7 +94,6 @@
 <div class="page-wrapper">
 
     <div style="width:100%; max-width:820px; display:flex; justify-content:flex-end; gap:12px; margin-bottom:-32px;">
-        <a href="submit_query.jsp" class="btn btn-secondary">Submit Query</a>
         <a href="logout.jsp" class="btn btn-secondary">Logout</a>
     </div>
 
@@ -319,6 +318,10 @@
         <% } %>
 
     <% } %>
+
+    <div style="width:100%; max-width:820px; display:flex; justify-content:center; margin-top:24px;">
+        <a href="submit_query.jsp" class="btn btn-secondary">Need help? Submit a Support Query</a>
+    </div>
 
     <div class="pond-footer">
         <p>Travelog &copy; 2026 — Team 4</p>

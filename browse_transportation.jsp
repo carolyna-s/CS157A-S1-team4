@@ -416,17 +416,16 @@
             <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:16px; padding:16px; background:var(--cream); border-radius:var(--radius); align-items:flex-end;">
                 <div>
                     <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">Max Price</label>
-                    <input type="number" id="flight-max-price" placeholder="Any" min="0" oninput="filterFlights()" style="width:120px; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--warm-white);">
+                    <input type="number" id="flight-max-price" placeholder="Any" min="0" oninput="filterFlights()" style="width:140px; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--warm-white);">
                 </div>
                 <div>
-                    <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">Departure Time</label>
-                    <select id="flight-time" onchange="filterFlights()" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--warm-white); color:var(--charcoal);">
+                    <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">Departure Time (local)</label>
+                    <select id="flight-time" onchange="filterFlights()" title="Times shown are departure airport local time" style="width:200px; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--warm-white); color:var(--charcoal);">
                         <option value="any">Any Time</option>
                         <option value="morning">Morning (6am–12pm)</option>
                         <option value="afternoon">Afternoon (12pm–6pm)</option>
                         <option value="evening">Evening (6pm+)</option>
                     </select>
-                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">departure airport local time</div>
                 </div>
                 <button onclick="document.getElementById('flight-max-price').value=''; document.getElementById('flight-time').value='any'; filterFlights();" class="btn btn-secondary" style="padding:8px 16px; font-size:0.82rem;">Reset</button>
             </div>
