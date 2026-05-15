@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell($mysql = \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\"; $sql = \"ALTER TABLE Hotel_Listing ADD COLUMN discount_percent DECIMAL\\(5,2\\) NOT NULL DEFAULT 0 AFTER price_per_night; ALTER TABLE Transport_Listing ADD COLUMN discount_percent DECIMAL\\(5,2\\) NOT NULL DEFAULT 0 AFTER base_cost;\"; & $mysql -u root -p\"2004\" travelog -e $sql 2>&1)",
-      "PowerShell($mysql = \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\"; & $mysql -u root -p\"2004\" travelog -e \"SHOW COLUMNS FROM Hotel_Listing LIKE 'discount_percent'; SHOW COLUMNS FROM Transport_Listing LIKE 'discount_percent';\" 2>$null)"
-    ]
-  }
-}
