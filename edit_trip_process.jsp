@@ -3,6 +3,7 @@
 <%@ include file="/WEB-INF/db_config.jsp" %>
 
 <%
+    // got to be logged in to edit trips
     Integer userID = (Integer) session.getAttribute("userID");
 
     if (userID == null) {
@@ -10,6 +11,7 @@
         return;
     }
 
+    // pull form fields from trip_details.jsp edit form
     String tripIdParam = request.getParameter("tripId");
     String tripName = request.getParameter("trip_name");
     String startLocation = request.getParameter("start_location");
@@ -17,6 +19,7 @@
     String startDate = request.getParameter("start_date");
     String endDate = request.getParameter("end_date");
 
+    // tripID comes in as a string so we make it into Integer using parseINT
     int tripId = 0;
     try {
         tripId = Integer.parseInt(tripIdParam);
@@ -25,6 +28,7 @@
         return;
     }
 
+    // basic required field checks
     if (tripName == null || tripName.trim().isEmpty()) {
         response.sendRedirect("trip_details.jsp?tripId=" + tripId + "&error=Please+enter+a+trip+name.");
         return;
@@ -38,6 +42,7 @@
         return;
     }
 
+    // make sure dates are valid + start <= end 
     try {
         java.sql.Date sqlStartDate = java.sql.Date.valueOf(startDate);
         java.sql.Date sqlEndDate = java.sql.Date.valueOf(endDate);
@@ -57,6 +62,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
+        // update trip + make sure userid is changing thier own trip no one else's
         pstmt = con.prepareStatement(
             "UPDATE Trip SET trip_name = ?, start_location = ?, destination = ?, start_date = ?, end_date = ? " +
             "WHERE tripID = ? AND userID = ?"
@@ -69,6 +75,7 @@
         pstmt.setInt(6, tripId);
         pstmt.setInt(7, userID);
 
+        // executeUpdate returns number of rows changed 
         int rowsAffected = pstmt.executeUpdate();
         pstmt.close();
         con.close();

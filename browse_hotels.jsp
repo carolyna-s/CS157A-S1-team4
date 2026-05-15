@@ -13,15 +13,18 @@
 
 
 <%
+    // session details: username and userid
     String username = (String) session.getAttribute("username");
     Integer userID = (Integer) session.getAttribute("userID");
 
+    // redirect to login in case of missing session
     if (username == null) 
     {
         response.sendRedirect("login.jsp");
         return;
     }
 
+    // get tripID for this specific browsing of hotels
     String tripIdParam = request.getParameter("tripId");
     if (tripIdParam == null) 
     {
@@ -30,7 +33,7 @@
     }
     int tripId = Integer.parseInt(tripIdParam);
 
-    //get trip info
+    //get trip info via tripID (primary key)
     Connection con = null;
     PreparedStatement pstmt = null;
     ResultSet rs = null;
@@ -43,6 +46,7 @@
     try {
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS); 
+        // SELECT statment, simple DML query
         pstmt = con.prepareStatement(
             "SELECT destination, start_date, end_date FROM Trip WHERE tripID = ? AND userID = ?"
         );
@@ -62,7 +66,8 @@
     {
         e.printStackTrace();
     }
- // searching parameters
+
+    // searching parameters
     String searchLoc = request.getParameter("location");
     String inDate = request.getParameter("check_in_date");
     String outDate = request.getParameter("check_out_date");
@@ -90,7 +95,7 @@
                 con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
             }
 
-            // query to see if recent and ordered by cost (fix? bc things not ordered by cost)
+            // query to see if recent and ordered by cost 
             pstmt = con.prepareStatement(
                 "SELECT * FROM Hotel_Listing " +
                 "WHERE location = ? "  +
@@ -123,12 +128,11 @@
                 rs.close();
                 pstmt.close();
             } 
-            // nothing previously saved,use api
+            // nothing previously saved, use api
             else 
             {
                 rs.close();
                 pstmt.close();
-
 
                 // api url info per the webapge
                 String apiUrl = "https://serpapi.com/search?engine=google_hotels" +
@@ -272,16 +276,26 @@
         }
     }
 
+    // Special Listings means company-posted hotels + only show after a search + only when posted location matches relatively close
     ArrayList<HashMap<String, String>> companyListings = new ArrayList<>();
+    if (searched) {
     try {
-        if (con == null || con.isClosed()) 
+        if (con == null || con.isClosed())
         {
             Class.forName(DB_DRIVER);
             con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
         }
+        // checking LIKE both ways, basically searched contains posted OR posted contains searched
+        String locLike = "%" + searchLoc.trim().toUpperCase() + "%";
         pstmt = con.prepareStatement(
-            "SELECT * FROM Hotel_Listing WHERE company_userID IS NOT NULL AND listing_status = 'active' AND last_fetched > DATE_SUB(NOW(), INTERVAL 30 DAY) ORDER BY price_per_night ASC "
+            "SELECT * FROM Hotel_Listing " +
+            "WHERE company_userID IS NOT NULL AND listing_status = 'active' " +
+            "  AND availability = 'available' " +
+            "  AND (location LIKE ? OR ? LIKE CONCAT('%', location, '%')) " +
+            "ORDER BY price_per_night ASC"
         );
+        pstmt.setString(1, locLike);
+        pstmt.setString(2, searchLoc.trim().toUpperCase());
         rs = pstmt.executeQuery();
         while (rs.next()) {
             HashMap<String, String> listing = new HashMap<>();
@@ -296,15 +310,13 @@
         rs.close();
         pstmt.close();
     } 
-    catch (Exception e) 
+    catch (Exception e)
     {
         e.printStackTrace();
-    } 
-    finally 
-    {
-        if (con != null) { try { con.close(); } catch(Exception ex) {} }
     }
-    %> 
+    } // end if (searched)
+    if (con != null) { try { con.close(); } catch(Exception ex) {} }
+    %>
 
 <!DOCTYPE html>
 <html lang="en">

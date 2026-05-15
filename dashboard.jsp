@@ -2,9 +2,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ include file="/WEB-INF/db_config.jsp" %>
 <%
+    // pull session info: username for greeting + userID for db queries
     String username = (String) session.getAttribute("username");
     Integer userID = (Integer) session.getAttribute("userID");
 
+    // session expired or never logged in
     if (username == null) {
         response.sendRedirect("login.jsp");
         return;
@@ -19,7 +21,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
-        // show the trips by recent (time created DESC, probs update later to last_edited_time)
+        // grab the 5 most recently created trips for this user, full will be on view_trips.jsp
         pstmt = con.prepareStatement(
             "SELECT tripID, trip_name, start_location, destination, start_date, end_date, status " +
             "FROM Trip WHERE userID = ? " +
@@ -27,6 +29,8 @@
         );
         pstmt.setInt(1, userID);
         rs = pstmt.executeQuery();
+        // isBeforeFirst tells us if the result has any rows w/o moving the cursor
+        // https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html#isBeforeFirst--
         hasTrips = rs.isBeforeFirst();
     } catch (Exception e) {
         e.printStackTrace();
@@ -45,6 +49,7 @@
 <div class="page-wrapper">
 
     <div style="width: 100%; max-width: 820px; display: flex; justify-content: flex-end; gap: 12px; margin-bottom: -32px;">
+        <a href="submit_query.jsp" class="btn btn-secondary">Submit Query</a>
         <a href="logout.jsp" class="btn btn-secondary">Logout</a>
         <a href="delete_account.jsp" class="btn btn-danger">Delete Account</a>
     </div>
