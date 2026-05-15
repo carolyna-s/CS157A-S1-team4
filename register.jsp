@@ -18,6 +18,7 @@
         </div>
 
         <%
+            // error message comes back from register_process when validation fails
             String error = request.getParameter("error");
             if (error != null) {
         %>
@@ -97,11 +98,14 @@
         </form>
 
         <script>
+        // swaps which fields show depending on traveler vs company
+        // also toggles required so the hidden ones dont block submit
         function toggleFields() {
             var type = document.getElementById('accountType').value;
             var tf = document.getElementById('travelerFields');
             var cf = document.getElementById('companyFields');
             if (type === 'company') {
+                // hide traveler fields, show company fields
                 tf.style.display = 'none';
                 cf.style.display = 'block';
                 document.getElementById('firstName').removeAttribute('required');
@@ -109,6 +113,7 @@
                 document.getElementById('location').removeAttribute('required');
                 document.getElementById('companyName').setAttribute('required', 'required');
             } else {
+                // default = traveler
                 tf.style.display = 'block';
                 cf.style.display = 'none';
                 document.getElementById('firstName').setAttribute('required', 'required');

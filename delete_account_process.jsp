@@ -5,6 +5,7 @@
 <%@ include file="/WEB-INF/db_config.jsp" %>
 
 <%
+    // must be logged in
     Integer userID = (Integer) session.getAttribute("userID");
 
     if (userID == null) {
@@ -12,6 +13,7 @@
         return;
     }
 
+    // password reconfirm is required so somebody cant just click the link
     String password = request.getParameter("password");
 
     if (password == null || password.trim().isEmpty()) {
@@ -19,6 +21,7 @@
         return;
     }
 
+    // hash same way register/login does so we can compare
     String hashedPassword = "";
     try {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -43,6 +46,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
+        // verify the password matches what we have stored before we delete anything
         pstmt = con.prepareStatement(
             "SELECT userID FROM Users WHERE userID = ? AND password = ?"
         );
@@ -54,15 +58,18 @@
             rs.close();
             pstmt.close();
 
+            // delete from Users + cascade which we have in setup file
             pstmt = con.prepareStatement("DELETE FROM Users WHERE userID = ?");
             pstmt.setInt(1, userID);
             pstmt.executeUpdate();
             pstmt.close();
             con.close();
 
+            // kill the session too
             session.invalidate();
             response.sendRedirect("login.jsp?success=Account+deleted+successfully.");
         } else {
+            // password didnt match, delete doesn't go through
             rs.close();
             pstmt.close();
             con.close();

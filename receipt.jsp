@@ -3,6 +3,8 @@
 <%@ include file="WEB-INF/db_config.jsp" %>
 
 <%
+    // receipt page after we book + shows up as button
+    // pull session info — same gate as the other trip pages
     String username = (String) session.getAttribute("username");
     Integer userID  = (Integer) session.getAttribute("userID");
 
@@ -11,6 +13,7 @@
         return;
     }
 
+    // check which trip's receipt are we rendering
     String tripIdParam = request.getParameter("tripId");
     if (tripIdParam == null) {
         response.sendRedirect("view_trips.jsp");
@@ -29,11 +32,13 @@
     PreparedStatement pstmt = null;
     ResultSet rs = null;
 
+    // empty defaults, so then these get filled in by the queries below
     String tripName = "", startLocation = "", destination = "", startDate = "", endDate = "";
     int paymentID = 0;
     double paymentAmount = 0.0;
     String paymentMethod = "", paymentTimestamp = "", paymentStatus = "";
 
+    // show flights + hotels seperatly
     java.util.ArrayList<java.util.HashMap<String, String>> outboundFlights = new java.util.ArrayList<>();
     java.util.ArrayList<java.util.HashMap<String, String>> returnFlights   = new java.util.ArrayList<>();
     java.util.ArrayList<java.util.HashMap<String, String>> hotels          = new java.util.ArrayList<>();
@@ -42,6 +47,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
+        // query 1: trip header info + checking for ownership
         pstmt = con.prepareStatement(
             "SELECT trip_name, start_location, destination, start_date, end_date " +
             "FROM Trip WHERE tripID = ? AND userID = ?"
@@ -50,6 +56,7 @@
         pstmt.setInt(2, userID);
         rs = pstmt.executeQuery();
         if (!rs.next()) {
+            // not their trip, so then we go to trip list
             response.sendRedirect("view_trips.jsp");
             return;
         }
@@ -60,6 +67,7 @@
         endDate       = rs.getString("end_date");
         rs.close(); pstmt.close();
 
+        // fix dates to the american way :D
         try {
             java.text.SimpleDateFormat inFmt  = new java.text.SimpleDateFormat("yyyy-MM-dd");
             java.text.SimpleDateFormat outFmt = new java.text.SimpleDateFormat("MM/dd/yyyy");
@@ -67,6 +75,7 @@
             if (endDate   != null && !endDate.isEmpty())   endDate   = outFmt.format(inFmt.parse(endDate));
         } catch (Exception e) {}
 
+        // query 2: most recent payments row for this trip (the booking payment)
         pstmt = con.prepareStatement(
             "SELECT paymentID, amount, payment_method, payment_status, payment_timestamp " +
             "FROM Payments WHERE tripID = ? AND userID = ? ORDER BY payment_timestamp DESC LIMIT 1"
@@ -83,6 +92,7 @@
         }
         rs.close(); pstmt.close();
 
+        // query 3: all transportation rows joined w/ the listing for display info
         pstmt = con.prepareStatement(
             "SELECT tt.direction, tt.price, tl.transport_name, tl.departure_location, " +
             "tl.arrival_destination, tl.departure_time, tl.arrival_time " +
@@ -106,6 +116,7 @@
         }
         rs.close(); pstmt.close();
 
+        // query 4: hotels, join Hotel_Listing for name + location
         pstmt = con.prepareStatement(
             "SELECT th.check_in_date, th.check_out_date, th.booked_price_per_night, th.total_cost, " +
             "hl.hotel_name, hl.location " +

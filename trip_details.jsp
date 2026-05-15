@@ -3,6 +3,7 @@
 <%@ include file="WEB-INF/db_config.jsp" %>
 
 <%
+    // get session
     String username = (String) session.getAttribute("username");
     Integer userID = (Integer) session.getAttribute("userID");
 
@@ -11,12 +12,14 @@
         return;
     }
 
+    // which trip are we looking at, we will see the URL like trip_details.jsp?tripId=5
     String tripIdParam = request.getParameter("tripId");
     if (tripIdParam == null) {
         response.sendRedirect("view_trips.jsp");
         return;
     }
 
+    // make sure its a number
     int tripId = 0;
     try {
         tripId = Integer.parseInt(tripIdParam);
@@ -40,6 +43,7 @@
         Class.forName(DB_DRIVER);
         con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
+        // load the trip, userID validation
         pstmt = con.prepareStatement(
             "SELECT trip_name, start_location, destination, start_date, end_date, status " +
             " FROM Trip WHERE tripID = ? AND userID = ? "
@@ -56,13 +60,14 @@
             endDate = rs.getString("end_date");
             status = rs.getString("status");
         } else {
+            // trip didnt exist OR didnt belong to this user redirect
             response.sendRedirect("view_trips.jsp");
             return;
         }
         rs.close();
         pstmt.close();
 
-        // Don't close con yet — reuse for transport query
+        // we still need to pull transport + hotel lists below
     } catch (Exception e) {
         e.printStackTrace();
         if (con != null) { try { con.close(); } catch(Exception ex) {} }
@@ -70,11 +75,12 @@
         return;
     }
 
-    if (status == null) status = "planned";
+    if (status == null) status = "planned"; // safety
     String statusClass = status.toLowerCase();
+    // isLocked = trip is past the planning stage
     boolean isLocked = "booked".equals(status) || "cancelled".equals(status);
 
-    // Load selected transportation for this trip
+    // pull every transportation row attached to this trip
     java.util.ArrayList<java.util.HashMap<String, String>> selectedTransport = new java.util.ArrayList<>();
     try {
         if (con == null || con.isClosed()) {
@@ -109,17 +115,19 @@
     catch (Exception e) {
         e.printStackTrace();
     } 
+    // same pattern but for the hotels
     java.util.ArrayList<java.util.HashMap<String, String>> selectedHotels = new java.util.ArrayList<>();
     try{
         if (con == null || con.isClosed()){
             Class.forName(DB_DRIVER);
             con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
         }
+        // join Hotel_Listing for display fields
         pstmt = con.prepareStatement(
             "SELECT th.*, hl.hotel_name, hl.location, hl.thumbnail_url " +
             "FROM Trip_Hotels th " +
             "JOIN Hotel_Listing hl ON th.hotelID = hl.hotelID " +
-            "WHERE th.tripID = ? ORDER BY th.trip_hotel_sequence_num " 
+            "WHERE th.tripID = ? ORDER BY th.trip_hotel_sequence_num "
         );
         pstmt.setInt(1,tripId);
         rs=pstmt.executeQuery();
@@ -129,7 +137,7 @@
             h.put("hotelID", String.valueOf(rs.getInt("hotelID")));
             h.put("hotel_name", rs.getString("hotel_name"));
             h.put("location", rs.getString("location"));
-            
+
             String checkIn = rs.getString("check_in_date");
             String checkOut = rs.getString("check_out_date");
             try {
@@ -242,6 +250,7 @@
     </div>
 
     <%
+        // split transportation into outbound vs return so we can show them in two separate sections (each card has its own browse button)
         java.util.ArrayList<java.util.HashMap<String, String>> outboundFlights = new java.util.ArrayList<>();
         java.util.ArrayList<java.util.HashMap<String, String>> returnFlights = new java.util.ArrayList<>();
         for (java.util.HashMap<String, String> t : selectedTransport) {
@@ -272,9 +281,10 @@
                         <div class="trip-meta">
                             <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(t.get("price"))) %></div>
                             <div class="trip-status status-<%= t.get("booking_status") %>"><%= t.get("booking_status") %></div>
-                            <% if (!isLocked) { %>
+                            <% if (!"cancelled".equals(t.get("booking_status"))) { %>
                             <a href="remove_transportation.jsp?tripId=<%= tripId %>&seq=<%= t.get("seq") %>&transportID=<%= t.get("transportID") %>"
-                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
+                               onclick="return confirm('<%= "booked".equals(t.get("booking_status")) ? "Cancel this booked flight? A refund will be issued for its cost." : "Remove this flight from the trip?" %>');"
+                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;"><%= "booked".equals(t.get("booking_status")) ? "Cancel" : "Remove" %></a>
                             <% } %>
                         </div>
                     </div>
@@ -307,9 +317,10 @@
                         <div class="trip-meta">
                             <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(t.get("price"))) %></div>
                             <div class="trip-status status-<%= t.get("booking_status") %>"><%= t.get("booking_status") %></div>
-                            <% if (!isLocked) { %>
+                            <% if (!"cancelled".equals(t.get("booking_status"))) { %>
                             <a href="remove_transportation.jsp?tripId=<%= tripId %>&seq=<%= t.get("seq") %>&transportID=<%= t.get("transportID") %>"
-                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
+                               onclick="return confirm('<%= "booked".equals(t.get("booking_status")) ? "Cancel this booked flight? A refund will be issued for its cost." : "Remove this flight from the trip?" %>');"
+                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;"><%= "booked".equals(t.get("booking_status")) ? "Cancel" : "Remove" %></a>
                             <% } %>
                         </div>
                     </div>
@@ -354,9 +365,10 @@
                         <div class="trip-meta">
                             <div class="trip-name" style="color: var(--accent);">$<%= String.format("%.2f", Double.parseDouble(h.get("total_cost"))) %></div>
                             <div class="trip-status status-<%= h.get("booking_status") %>"><%= h.get("booking_status") %></div>
-                            <% if (!isLocked) { %>
+                            <% if (!"cancelled".equals(h.get("booking_status"))) { %>
                             <a href="remove_hotel.jsp?tripId=<%= tripId %>&seq=<%= h.get("seq") %>&hotelID=<%= h.get("hotelID") %>"
-                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;">Remove</a>
+                               onclick="return confirm('<%= "booked".equals(h.get("booking_status")) ? "Cancel this booked hotel? A refund will be issued for its cost." : "Remove this hotel from the trip?" %>');"
+                               class="btn btn-danger" style="padding: 4px 12px; font-size: 0.75rem; margin-top: 6px;"><%= "booked".equals(h.get("booking_status")) ? "Cancel" : "Remove" %></a>
                             <% } %>
                         </div>
                     </div>
@@ -389,13 +401,18 @@
     <div class="card card-wide" style="margin-bottom: 24px;">
         <h2>Cancel Trip</h2>
         <p style="color: var(--text-muted); font-weight: 500; line-height: 1.8; margin-top: 12px;">
-            Cancelling this trip cannot be undone.
+            Cancelling this trip cannot be undone. <% if ("booked".equals(status)) { %>A full refund will be issued.<% } %>
+            Enter your password to confirm.
         </p>
         <form action="cancel_trip_process.jsp" method="POST" style="margin-top: 18px;"
             onsubmit="return confirm('Are you sure you want to cancel this trip?');">
-        <input type="hidden" name="tripId" value="<%= tripId %>">
-        <button type="submit" class="btn btn-danger">Cancel Trip</button>
-    </form>
+            <input type="hidden" name="tripId" value="<%= tripId %>">
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Your account password" required>
+            </div>
+            <button type="submit" class="btn btn-danger">Cancel Trip</button>
+        </form>
     </div>
     <% } %>
     
