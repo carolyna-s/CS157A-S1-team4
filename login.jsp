@@ -18,6 +18,7 @@
         </div>
 
         <%
+            // success msg comes back from register process/flow
             String success = request.getParameter("success");
             if (success != null) {
         %>
@@ -27,6 +28,7 @@
         %>
 
         <%
+            // error msg gets passed back from login_process if creds are bad
             String error = request.getParameter("error");
             if (error != null) {
         %>
