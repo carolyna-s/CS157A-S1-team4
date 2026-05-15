@@ -417,10 +417,3 @@
 </div>
 </body>
 </html>
-
-
-// basically just price breakdowns
-//button to book trip (changes status from planned -> booked)
-
-//will need process jsp for button after confirming details that makes planned into booked
-//button doesnt save anything other than changing status. lol.
