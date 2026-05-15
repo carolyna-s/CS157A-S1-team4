@@ -73,6 +73,7 @@ CREATE TABLE Hotel_Listing (
     description TEXT,
     rating DECIMAL(2,1),
     price_per_night DECIMAL(10,2) NOT NULL,
+    discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0,
     availability ENUM('available', 'unavailable') NOT NULL DEFAULT 'available',
     listing_status ENUM('active', 'archived', 'hidden') NOT NULL DEFAULT 'active',
     last_fetched DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -90,11 +91,19 @@ CREATE TABLE Transport_Listing (
     departure_time DATETIME NOT NULL,
     arrival_time DATETIME NOT NULL,
     base_cost DECIMAL(10,2) NOT NULL,
+    discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0,
     availability ENUM('available', 'unavailable') NOT NULL DEFAULT 'available',
     listing_status ENUM('active', 'archived', 'hidden') NOT NULL DEFAULT 'active',
     last_fetched DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (company_userID) REFERENCES Company(userID) ON DELETE SET NULL
 );
+
+-- ----------------------------------------------------------------------
+-- Migration for existing databases (run once if Hotel_Listing /
+-- Transport_Listing were created before discount_percent was added):
+--   ALTER TABLE Hotel_Listing     ADD COLUMN discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0 AFTER price_per_night;
+--   ALTER TABLE Transport_Listing ADD COLUMN discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0 AFTER base_cost;
+-- ----------------------------------------------------------------------
 
 CREATE TABLE Trip_Hotels (
     trip_hotel_sequence_num INT NOT NULL,
